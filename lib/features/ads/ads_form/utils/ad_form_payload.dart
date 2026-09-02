@@ -17,53 +17,53 @@ class AdFormPayloadBuilder {
           .asMap()
           .entries
           .map(
-            (e) => {
-              'media': e.value.fileId,
-              'media_id': e.value.fileId,
-              'image': e.value.url,
-              'is_primary': e.value.isPrimary ? 1 : 0,
-              'sort_order': e.key,
+            (entry) => <String, dynamic>{
+              'media': entry.value.fileId,
+              'is_primary': entry.value.isPrimary ? 1 : 0,
+              'sort_order': entry.key,
             },
           )
-          .toList(),
+          .toList(growable: false),
     };
 
     if (!isEmptyStr(d.videoFileId)) {
       payload['video_media'] = d.videoFileId;
-      payload['video_media_id'] = d.videoFileId;
-    } else if (!isEmptyStr(d.videoUrl)) {
-      payload['video'] = d.videoUrl;
     }
 
-    final schemaByKey = {for (final a in schema.attributes) a.key: a};
+    final schemaByKey = {
+      for (final attribute in schema.attributes) attribute.key: attribute,
+    };
     final details = <Map<String, dynamic>>[];
 
-    for (final e in d.attributes.entries) {
-      final key = e.key;
-      final v = e.value;
-      final a = schemaByKey[key];
-      if (a == null) continue;
+    for (final entry in d.attributes.entries) {
+      final attribute = schemaByKey[entry.key];
+      if (attribute == null) continue;
 
-      final row = <String, dynamic>{'attribute': key};
+      final value = entry.value;
+      // The backend accepts the category attribute key and resolves it to the
+      // canonical attribute ID during create/update normalization. Keeping the
+      // key in saved draft payloads also lets the form restore values before
+      // submission without depending on display labels.
+      final row = <String, dynamic>{'attribute': entry.key};
 
-      switch (a.type) {
+      switch (attribute.type) {
         case AdAttributeType.number:
         case AdAttributeType.year:
-          row['value_number'] = v;
+          row['value_number'] = value;
           break;
         case AdAttributeType.boolean:
-          row['value_bool'] = v == true ? 1 : 0;
+          row['value_bool'] = value == true ? 1 : 0;
           break;
         case AdAttributeType.multiselect:
-          row['value_json'] = v;
+          row['value_json'] = value;
           break;
         case AdAttributeType.date:
-          row['value_date'] = v;
+          row['value_date'] = value;
           break;
         case AdAttributeType.select:
         case AdAttributeType.text:
         case AdAttributeType.unknown:
-          row['value_text'] = v;
+          row['value_text'] = value;
           break;
       }
 
@@ -72,12 +72,13 @@ class AdFormPayloadBuilder {
 
     payload['details'] = details;
 
-    final p = schema.pricing;
-    final priceType = d.priceType;
+    final pricing = schema.pricing;
+    final priceType = resolvedPriceType(d.priceType, pricing);
 
-    if (p.requirement != PricingRequirement.hidden) {
+    if (pricing.requirement != PricingRequirement.hidden) {
       final optionalEmpty =
-          p.requirement == PricingRequirement.optional && isEmptyStr(priceType);
+          pricing.requirement == PricingRequirement.optional &&
+          isEmptyStr(priceType);
 
       if (!optionalEmpty) {
         if (!isEmptyStr(priceType)) payload['price_type'] = priceType;
@@ -85,7 +86,7 @@ class AdFormPayloadBuilder {
         if (typeNeedsAmount(priceType)) {
           if (d.price != null) payload['price'] = d.price;
 
-          if (typeNeedsUnit(priceType, p) && !isEmptyStr(d.priceUnit)) {
+          if (typeNeedsUnit(priceType, pricing) && !isEmptyStr(d.priceUnit)) {
             payload['price_unit'] = d.priceUnit;
           }
         }

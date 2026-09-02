@@ -8,6 +8,7 @@ import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widg
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/media_image_tile.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/media_video_tile.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/section_tile.dart';
+import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
 import 'package:africaonlinestores/shared/utils/url_to_file.dart';
 import 'package:flutter/material.dart';
@@ -23,12 +24,13 @@ class MediaSection extends ConsumerStatefulWidget {
 class _MediaSectionState extends ConsumerState<MediaSection> {
   bool _uploadingImage = false;
   bool _uploadingVideo = false;
+  bool _editingImage = false;
 
   final Map<String, File> _localEditedPreviews = {};
 
   // ---------------- UPLOAD IMAGE CORE ----------------
   Future<void> _upload(AcquiredMedia media) async {
-    if (_uploadingImage) {
+    if (_uploadingImage || _editingImage) {
       await media.discard();
       return;
     }
@@ -54,6 +56,8 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
 
   // ---------------- TAKE PHOTO ----------------
   Future<void> _takePhoto() async {
+    if (_editingImage) return;
+
     final draft = ref.read(adDraftControllerProvider).value;
     if (draft == null || draft.images.length >= 4) return;
 
@@ -71,6 +75,8 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
 
   // ---------------- UPLOAD MULTIPLE ----------------
   Future<void> _uploadPhotos() async {
+    if (_editingImage) return;
+
     final draft = ref.read(adDraftControllerProvider).value;
     if (draft == null || draft.images.length >= 4) return;
 
@@ -95,19 +101,89 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
 
   // ---------------- MARK PRIMARY ----------------
   void _markPrimary(int index) {
+    if (_uploadingImage || _editingImage) return;
+
     final draft = ref.read(adDraftControllerProvider).value;
     if (draft == null) return;
 
-    // If already primary do nothing
     if (index == 0) return;
 
     final images = [...draft.images];
-
     final selected = images.removeAt(index);
     images.insert(0, selected);
 
-    // Replace entire list (clean reorder)
     ref.read(adDraftControllerProvider.notifier).replaceImages(images);
+  }
+
+  // ---------------- EDIT IMAGE ----------------
+
+  Future<void> _editImage(int imageIndex, AdMediaImage image) async {
+    if (_editingImage || _uploadingImage) return;
+
+    setState(() => _editingImage = true);
+
+    File? sourceFile;
+    File? editedFile;
+
+    try {
+      sourceFile = await urlToFile(image.url);
+      if (!mounted) return;
+
+      editedFile = await Navigator.push<File>(
+        context,
+        MaterialPageRoute<File>(
+          builder: (_) => EditImageScreen(
+            file: sourceFile!,
+            fileId: image.fileId,
+            index: imageIndex,
+          ),
+        ),
+      );
+
+      if (!mounted || editedFile == null) return;
+      final resultFile = editedFile;
+
+      setState(() {
+        _localEditedPreviews[image.fileId] = resultFile;
+      });
+
+      final replaceResult = await ref
+          .read(adDraftControllerProvider.notifier)
+          .replaceImageAt(imageIndex, resultFile);
+
+      if (replaceResult.isLeft && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(replaceResult.leftOrNull!.message)),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _localEditedPreviews.remove(image.fileId);
+          _editingImage = false;
+        });
+      }
+
+      final editedPath = editedFile?.path;
+      if (editedFile != null) {
+        await _deleteTemporaryFile(editedFile);
+      }
+      if (sourceFile != null && sourceFile.path != editedPath) {
+        await _deleteTemporaryFile(sourceFile);
+      }
+    }
+  }
+
+  Future<void> _deleteTemporaryFile(File file) async {
+    try {
+      // ignore: avoid_slow_async_io
+      if (await file.exists()) {
+        await file.delete();
+      }
+    } on FileSystemException {
+      // Best-effort cleanup only. Upload state must not fail because temp
+      // cleanup was denied by the platform.
+    }
   }
 
   // ---------------- VIDEO ----------------
@@ -154,17 +230,36 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
 
     setState(() => _uploadingVideo = true);
 
-    await ref.read(adDraftControllerProvider.notifier).uploadAndSetVideo(media);
-
-    if (mounted) {
-      setState(() => _uploadingVideo = false);
+    try {
+      await ref
+          .read(adDraftControllerProvider.notifier)
+          .uploadAndSetVideo(media);
+    } finally {
+      if (mounted) {
+        setState(() => _uploadingVideo = false);
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    for (final file in _localEditedPreviews.values) {
+      try {
+        if (file.existsSync()) file.deleteSync();
+      } on FileSystemException {
+        continue;
+      }
+    }
+    _localEditedPreviews.clear();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final draft = ref.watch(adDraftControllerProvider).value;
     if (draft == null) return const SizedBox.shrink();
+
+    final imageBusy = _uploadingImage || _editingImage;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -179,8 +274,8 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
                 child: ActionMediaCard(
                   icon: Icons.upload_outlined,
                   label: 'Upload Photos',
-                  loading: _uploadingImage,
-                  onTap: _uploadPhotos,
+                  loading: imageBusy,
+                  onTap: imageBusy ? null : _uploadPhotos,
                 ),
               ),
               const SizedBox(width: 12),
@@ -188,8 +283,8 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
                 child: ActionMediaCard(
                   icon: Icons.camera_alt_outlined,
                   label: 'Take Photo',
-                  loading: _uploadingImage,
-                  onTap: _takePhoto,
+                  loading: imageBusy,
+                  onTap: imageBusy ? null : _takePhoto,
                 ),
               ),
             ],
@@ -205,56 +300,31 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
               itemBuilder: (_, i) {
                 if (draft.images.length < 4 && i == 0) {
                   return AddPhotoTile(
-                    loading: _uploadingImage,
+                    loading: imageBusy,
                     onUpload: _uploadPhotos,
                     onTakePhoto: _takePhoto,
                   );
                 }
 
-                // Shift index if AddTile exists
                 final imageIndex = draft.images.length < 4 ? i - 1 : i;
-
-                final img = draft.images[imageIndex];
+                final image = draft.images[imageIndex];
 
                 return MediaImageTile(
-                  image: img,
-                  localPreviewFile: _localEditedPreviews[img.fileId],
+                  image: image,
+                  localPreviewFile: _localEditedPreviews[image.fileId],
                   isPrimary: imageIndex == 0,
                   showPrimaryOption: imageIndex != 0,
-                  onDelete: _uploadingImage
+                  onDelete: imageBusy
                       ? null
                       : () => ref
                             .read(adDraftControllerProvider.notifier)
                             .removeImage(imageIndex),
-                  onMarkPrimary: _uploadingImage
+                  onMarkPrimary: imageBusy
                       ? null
                       : () => _markPrimary(imageIndex),
-                  onEdit: () async {
-                    final file = await urlToFile(img.url);
-
-                    if (!context.mounted) return;
-
-                    final edited = await Navigator.push<File>(
-                      context,
-                      MaterialPageRoute<File>(
-                        builder: (_) => EditImageScreen(
-                          file: file,
-                          fileId: img.fileId,
-                          index: imageIndex,
-                        ),
-                      ),
-                    );
-
-                    if (edited == null) return;
-
-                    setState(() {
-                      _localEditedPreviews[img.fileId] = edited;
-                    });
-
-                    await ref
-                        .read(adDraftControllerProvider.notifier)
-                        .replaceImageAt(imageIndex, edited);
-                  },
+                  onEdit: imageBusy
+                      ? null
+                      : () => _editImage(imageIndex, image),
                 );
               },
             ),
@@ -274,7 +344,7 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
                   icon: Icons.upload_outlined,
                   label: 'Upload Video',
                   loading: _uploadingVideo,
-                  onTap: _uploadVideoFromGallery,
+                  onTap: _uploadingVideo ? null : _uploadVideoFromGallery,
                 ),
               ),
               const SizedBox(width: 12),
@@ -283,7 +353,7 @@ class _MediaSectionState extends ConsumerState<MediaSection> {
                   icon: Icons.video_library_outlined,
                   label: 'Take Video',
                   loading: _uploadingVideo,
-                  onTap: _takeVideo,
+                  onTap: _uploadingVideo ? null : _takeVideo,
                 ),
               ),
             ],

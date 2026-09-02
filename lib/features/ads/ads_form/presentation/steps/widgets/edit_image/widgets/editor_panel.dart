@@ -18,6 +18,7 @@ class EditorPanel extends StatelessWidget {
     required this.busy,
     required this.selectedBackgroundColor,
     required this.selectedGradient,
+    required this.transparentSelected,
     required this.applyingBackground,
     required this.activeTool,
   });
@@ -32,6 +33,7 @@ class EditorPanel extends StatelessWidget {
   final bool bgRemoved;
   final bool busy;
   final bool applyingBackground;
+  final bool transparentSelected;
 
   final Color? selectedBackgroundColor;
   final List<Color>? selectedGradient;
@@ -66,24 +68,19 @@ class EditorPanel extends StatelessWidget {
               borderRadius: BorderRadius.circular(99),
             ),
           ),
-
           const SizedBox(height: 18),
-
           _buildTools(context),
-
           if (bgRemoved) ...[
             const SizedBox(height: 18),
             const Divider(height: 1),
             const SizedBox(height: 18),
-
             BackgroundPicker(
               selectedColor: selectedBackgroundColor,
+              transparentSelected: transparentSelected,
               isApplying: applyingBackground,
               onSelect: onBackgroundColor,
             ),
-
             const SizedBox(height: 18),
-
             GradientPicker(
               selectedGradient: selectedGradient,
               isApplying: applyingBackground,

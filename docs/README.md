@@ -39,3 +39,4 @@ must not redefine backend contracts.
   - [Notifications physical device checklist](features/notifications/device-test-matrix.md)
 - [Notifications + Activity hardening validation](features/notifications-activity-hardening-validation.md)
 - [Seller location and maps](features/seller_location_maps.md)
+- [Ads mobile hardening](features/ads-mobile-hardening.md)

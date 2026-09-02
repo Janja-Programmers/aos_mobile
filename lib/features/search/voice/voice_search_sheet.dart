@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
 import 'package:africaonlinestores/features/search/controller/voice_input_controller.dart';
@@ -20,21 +22,34 @@ class _VoiceSearchSheetState extends ConsumerState<VoiceSearchSheet> {
   void initState() {
     super.initState();
 
-    Future.microtask(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
-      ref
-          .read(voiceInputControllerProvider.notifier)
-          .startListening(
-            onWords: (words, {required bool isFinal}) {
-              if (!mounted || _closing) return;
+      final controller = ref.read(voiceInputControllerProvider.notifier);
+      controller.reset();
 
-              setState(() => _words = words);
+      unawaited(
+        controller.startListening(
+          onWords: (words, {required bool isFinal}) {
+            if (!mounted || _closing) return;
 
-              // Do not auto-pop on iOS/final result.
-              // Let the user explicitly tap Search.
-            },
-          );
+            setState(() => _words = words);
+
+            // Do not auto-pop on iOS/final result.
+            // Let the user explicitly tap Search.
+          },
+        ),
+      );
+    });
+  }
+
+  void _dismissForTimeout() {
+    if (_closing) return;
+    _closing = true;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
     });
   }
 
@@ -71,6 +86,12 @@ class _VoiceSearchSheetState extends ConsumerState<VoiceSearchSheet> {
   Widget build(BuildContext context) {
     final colors = context.appColors;
     final voice = ref.watch(voiceInputControllerProvider);
+
+    ref.listen<VoiceInputState>(voiceInputControllerProvider, (previous, next) {
+      if (next.timedOut && previous?.timedOut != true) {
+        _dismissForTimeout();
+      }
+    });
 
     final q = _words.trim();
     final canSearch = q.isNotEmpty && !_closing;

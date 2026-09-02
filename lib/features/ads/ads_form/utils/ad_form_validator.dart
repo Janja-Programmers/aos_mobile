@@ -2,6 +2,7 @@ import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/vali
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
 import 'package:africaonlinestores/features/ads/shared/utils/pricing/pricing_policy_resolver.dart';
+import 'package:africaonlinestores/features/ads/shared/utils/pricing_rules.dart';
 import 'package:africaonlinestores/shared/enums/ads.dart';
 
 class AdFormValidator {
@@ -16,6 +17,8 @@ class AdFormValidator {
       errors['title'] = 'Title is required';
     } else if (title.length < 5) {
       errors['title'] = 'Title must be at least 5 characters';
+    } else if (title.length > 140) {
+      errors['title'] = 'Title must be 140 characters or fewer';
     }
     if ((d.locationId ?? '').trim().isEmpty) {
       errors['location'] = 'Location is required';
@@ -78,6 +81,8 @@ class AdFormValidator {
       errors['description'] = 'Description is required';
     } else if (text.length < 20) {
       errors['description'] = 'Description must be at least 20 characters';
+    } else if (text.length > 5000) {
+      errors['description'] = 'Description must be 5000 characters or fewer';
     }
 
     if (errors.isNotEmpty) {
@@ -91,71 +96,57 @@ class AdFormValidator {
 
   static ValidationResult pricing(AdDraft d, AdCategorySchema schema) {
     final errors = <String, String>{};
-
     final pricing = schema.pricing;
 
-    // Skip validation if pricing hidden
     if (pricing.requirement == PricingRequirement.hidden) {
       return ValidationResult.valid();
     }
 
-    // Resolve policy using full schema
+    final priceType = resolvedPriceType(d.priceType, pricing);
+    final effectiveDraft = priceType == null
+        ? d
+        : d.copyWith(priceType: priceType);
+    final allowed = allowedPriceTypesForSchema(pricing);
     final policy = PricingPolicyResolver.resolve(schema);
 
-    final allowed = policy.allowedTypes(pricing);
-
-    // Validate price type
-    if (d.priceType == null || !allowed.contains(d.priceType)) {
+    if (priceType == null || !allowed.contains(priceType)) {
       errors['priceType'] = 'Select a valid price type';
     }
 
-    // Validate price
-    if (policy.requirePrice(d, pricing)) {
+    if (policy.requirePrice(effectiveDraft, pricing)) {
       if (d.price == null || d.price! <= 0) {
         errors['price'] = 'Enter a valid price';
       }
     }
 
-    // Validate unit
-    if (policy.requireUnit(d, pricing)) {
-      if (d.priceUnit == null || d.priceUnit!.trim().isEmpty) {
+    if (policy.requireUnit(effectiveDraft, pricing)) {
+      final unit = d.priceUnit?.trim() ?? '';
+      if (unit.isEmpty) {
         errors['priceUnit'] = 'Select a price unit';
+      } else if (pricing.allowedUnits.isNotEmpty &&
+          !pricing.allowedUnits.contains(unit)) {
+        errors['priceUnit'] = 'Select a valid price unit';
       }
     }
 
-    // Validate offer allowed
-    if (!policy.allowOffer(d, pricing)) {
-      if (d.offerPrice != null) {
-        errors['offerPrice'] = 'Offer not allowed for this price type';
-      }
+    if (!policy.allowOffer(effectiveDraft, pricing) && d.offerPrice != null) {
+      errors['offerPrice'] = 'Offer not allowed for this price type';
     }
 
-    // Validate offer price logic
     if (d.offerPrice != null) {
       if (d.offerPrice! <= 0) {
         errors['offerPrice'] = 'Enter a valid offer price';
       }
 
-      if (d.price != null && d.offerPrice! >= d.price!) {
+      if (d.price == null || d.offerPrice! >= d.price!) {
         errors['offerPrice'] = 'Offer price must be lower than price';
       }
     }
 
-    // Validate offer dates
-    if (policy.requireOfferDates(d) && (d.scheduleOfferDates ?? false)) {
-      if (d.offerStart == null) {
-        errors['offerStart'] = 'Select offer start date';
-      }
-
-      if (d.offerEnd == null) {
-        errors['offerEnd'] = 'Select offer end date';
-      }
-
-      if (d.offerStart != null &&
-          d.offerEnd != null &&
-          d.offerEnd!.isBefore(d.offerStart!)) {
-        errors['offerEnd'] = 'End date must be after start date';
-      }
+    if (d.offerStart != null &&
+        d.offerEnd != null &&
+        d.offerEnd!.isBefore(d.offerStart!)) {
+      errors['offerEnd'] = 'End date must be after start date';
     }
 
     if (errors.isNotEmpty) {

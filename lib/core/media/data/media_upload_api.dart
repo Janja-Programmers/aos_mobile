@@ -622,6 +622,7 @@ class MediaUploadApi {
 
   Future<Either<Failure, Map<String, dynamic>>> searchAdByImage({
     required File file,
+    int limit = 20,
   }) async {
     try {
       if (!file.existsSync()) {
@@ -631,7 +632,7 @@ class MediaUploadApi {
       final filename = _filenameFromPath(file.path);
       final formData = FormData.fromMap(<String, Object?>{
         'image': await MultipartFile.fromFile(file.path, filename: filename),
-        'is_private': '0',
+        'limit': limit,
       });
 
       final response = await _client.dio.post<Map<String, dynamic>>(
@@ -642,6 +643,8 @@ class MediaUploadApi {
       return unwrapFrappe(response);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
+    } on FileSystemException {
+      return Either.left(const Failure('Could not read selected image.'));
     } catch (_) {
       return Either.left(const Failure('Failed to search by image.'));
     }

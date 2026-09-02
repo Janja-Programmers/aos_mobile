@@ -2,6 +2,36 @@ import 'package:africaonlinestores/core/media/domain/media_upload_result.dart';
 import 'package:africaonlinestores/core/utils/json_utils.dart';
 import 'package:africaonlinestores/shared/enums/ads.dart';
 
+double? _optionalPositiveMoney(Object? value) {
+  final parsed = asNullableDouble(value);
+  if (parsed == null || parsed <= 0) return null;
+  return parsed;
+}
+
+Object? _adDetailValue(Map<String, dynamic> detail) {
+  return detail['value_text'] ??
+      detail['value_number'] ??
+      detail['value_date'] ??
+      detail['value_json'] ??
+      detail['value_bool'];
+}
+
+DateTime? _parseAdDate(Map<String, dynamic> item, String canonicalKey) {
+  final legacyKey = canonicalKey == 'offer_start_date'
+      ? 'offer_start'
+      : 'offer_end';
+  final value = item[canonicalKey] ?? item[legacyKey];
+  if (value == null) return null;
+  return DateTime.tryParse(asString(value));
+}
+
+bool _hasAdDate(Map<String, dynamic> item, String canonicalKey) {
+  final legacyKey = canonicalKey == 'offer_start_date'
+      ? 'offer_start'
+      : 'offer_end';
+  return item[canonicalKey] != null || item[legacyKey] != null;
+}
+
 class AdMediaImage {
   AdMediaImage({
     required this.url,
@@ -49,6 +79,7 @@ class AdDraft {
     required this.source,
     this.draftId,
     this.adId,
+    this.status,
 
     // ---------- BASIC ----------
     this.title = '',
@@ -88,6 +119,7 @@ class AdDraft {
   final DraftSource source;
   final String? draftId;
   final String? adId;
+  final String? status;
 
   // ---------- BASIC ----------
   final String title;
@@ -130,6 +162,7 @@ class AdDraft {
     DraftSource? source,
     String? draftId,
     String? adId,
+    String? status,
     String? title,
 
     String? countryId,
@@ -153,6 +186,11 @@ class AdDraft {
     DateTime? offerStart,
     DateTime? offerEnd,
 
+    bool clearPriceType = false,
+    bool clearPrice = false,
+    bool clearPriceUnit = false,
+    bool clearPricing = false,
+
     bool clearOfferPrice = false,
     bool clearOfferStart = false,
     bool clearOfferEnd = false,
@@ -166,6 +204,7 @@ class AdDraft {
       source: source ?? this.source,
       draftId: draftId ?? this.draftId,
       adId: adId ?? this.adId,
+      status: status ?? this.status,
 
       title: title ?? this.title,
 
@@ -183,17 +222,21 @@ class AdDraft {
 
       description: description ?? this.description,
 
-      priceType: priceType ?? this.priceType,
-      price: price ?? this.price,
-      priceUnit: priceUnit ?? this.priceUnit,
+      priceType: (clearPricing || clearPriceType)
+          ? null
+          : (priceType ?? this.priceType),
+      price: (clearPricing || clearPrice) ? null : (price ?? this.price),
+      priceUnit: (clearPricing || clearPriceUnit)
+          ? null
+          : (priceUnit ?? this.priceUnit),
 
-      offerPrice: (clearAllOffer || clearOfferPrice)
+      offerPrice: (clearPricing || clearAllOffer || clearOfferPrice)
           ? null
           : (offerPrice ?? this.offerPrice),
-      offerStart: (clearAllOffer || clearOfferStart)
+      offerStart: (clearPricing || clearAllOffer || clearOfferStart)
           ? null
           : (offerStart ?? this.offerStart),
-      offerEnd: (clearAllOffer || clearOfferEnd)
+      offerEnd: (clearPricing || clearAllOffer || clearOfferEnd)
           ? null
           : (offerEnd ?? this.offerEnd),
 
@@ -206,7 +249,6 @@ class AdDraft {
   factory AdDraft.fromAd(Map<String, dynamic> json) {
     final item = json;
 
-    // -------- images ----------
     final images = asJsonMapList(item['images'])
         .map(
           (Map<String, dynamic> e) => AdMediaImage(
@@ -224,31 +266,31 @@ class AdDraft {
         )
         .toList(growable: false);
 
-    // -------- attributes ----------
     final attrs = <String, dynamic>{};
-
     final details = asJsonMapList(item['details']);
 
-    for (final d in details) {
-      final attr = asNullableString(d['attribute']);
-
-      final Object? value =
-          d['value_text'] ??
-          d['value_number'] ??
-          d['value_bool'] ??
-          d['value_date'] ??
-          d['value_json'];
+    for (final detail in details) {
+      final attr = asNullableString(detail['attribute']);
+      final value = _adDetailValue(detail);
 
       if (attr != null && value != null) {
         attrs[attr] = value;
       }
     }
 
+    final offerPrice = _optionalPositiveMoney(item['offer_price']);
+    final offerStart = offerPrice == null
+        ? null
+        : _parseAdDate(item, 'offer_start_date');
+    final offerEnd = offerPrice == null
+        ? null
+        : _parseAdDate(item, 'offer_end_date');
+
     return AdDraft(
       source: DraftSource.edit,
       adId: asNullableString(item['id']),
+      status: asNullableString(item['status']),
 
-      // BASIC
       title: asString(item['title']),
       countryId: asNullableString(item['country']),
       locationId: asNullableString(item['location']),
@@ -256,51 +298,35 @@ class AdDraft {
       categoryId: asNullableString(item['category']),
       categoryLabel: asNullableString(item['category']),
 
-      // MEDIA
       images: images,
       videoUrl: asNullableString(item['video']),
       videoFileId: asNullableString(
         item['video_media'] ?? item['video_media_id'] ?? item['video_file_id'],
       ),
 
-      // DETAILS
       attributes: attrs,
-
-      // DESCRIPTION
       description: asString(item['description']),
 
-      // PRICING
       priceType: asNullableString(item['price_type']),
       price: asNullableDouble(item['price']),
       priceUnit: asNullableString(item['price_unit']),
 
-      // OFFER
-      offerPrice: asNullableDouble(item['offer_price']),
-      offerStart: item['offer_start'] != null
-          ? DateTime.tryParse(asString(item['offer_start']))
-          : null,
-      offerEnd: item['offer_end'] != null
-          ? DateTime.tryParse(asString(item['offer_end']))
-          : null,
-
+      offerPrice: offerPrice,
+      offerStart: offerStart,
+      offerEnd: offerEnd,
       scheduleOfferDates:
-          item['offer_start'] != null || item['offer_end'] != null,
+          offerPrice != null &&
+          (_hasAdDate(item, 'offer_start_date') ||
+              _hasAdDate(item, 'offer_end_date')),
     );
   }
 
-  factory AdDraft.fromDraft(Map<String, dynamic> json) {
-    final data = asJsonMap(json['item']);
-    // -------------------------------
-    // BASIC (fallback to hint fields)
-    // -------------------------------
+  factory AdDraft.fromDraft(Map<String, dynamic> data) {
     final title = asString(data['title']);
     final category = asNullableString(data['category']);
     final location = asNullableString(data['location']);
     final country = asNullableString(data['country']);
 
-    // -------------------------------
-    // MEDIA
-    // -------------------------------
     final images = asJsonMapList(data['images'])
         .map(
           (Map<String, dynamic> e) => AdMediaImage(
@@ -313,65 +339,49 @@ class AdDraft {
                   e['file'],
             ),
             isPrimary: asInt(e['is_primary']) == 1,
+            sortOrder: asNullableInt(e['sort_order']),
           ),
         )
         .toList(growable: false);
 
-    // -------------------------------
-    // ATTRIBUTES
-    // -------------------------------
     final attrs = <String, dynamic>{};
-
     final details = asJsonMapList(data['details']);
 
-    for (final d in details) {
-      final attr = asNullableString(d['attribute']);
-
-      final Object? value =
-          d['value_text'] ??
-          d['value_number'] ??
-          d['value_bool'] ??
-          d['value_date'] ??
-          d['value_json'];
+    for (final detail in details) {
+      final attr = asNullableString(detail['attribute']);
+      final value = _adDetailValue(detail);
 
       if (attr != null && value != null) {
         attrs[attr] = value;
       }
     }
 
-    // -------------------------------
-    // DESCRIPTION
-    // -------------------------------
     final description = asString(data['description']);
-
-    // -------------------------------
-    // PRICING
-    // -------------------------------
     final priceType = asNullableString(data['price_type']);
     final price = asNullableDouble(data['price']);
     final priceUnit = asNullableString(data['price_unit']);
 
-    final offerPrice = asNullableDouble(data['offer_price']);
-    final offerStart = data['offer_start'] != null
-        ? DateTime.tryParse(asString(data['offer_start']))
-        : null;
-
-    final offerEnd = data['offer_end'] != null
-        ? DateTime.tryParse(asString(data['offer_end']))
-        : null;
+    final offerPrice = _optionalPositiveMoney(data['offer_price']);
+    final offerStart = offerPrice == null
+        ? null
+        : _parseAdDate(data, 'offer_start_date');
+    final offerEnd = offerPrice == null
+        ? null
+        : _parseAdDate(data, 'offer_end_date');
 
     final scheduleOfferDates =
-        data['schedule_offer_dates'] ??
-        (data['offer_start'] != null || data['offer_end'] != null);
+        offerPrice != null &&
+        asBool(
+          data['schedule_offer_dates'] ??
+              (_hasAdDate(data, 'offer_start_date') ||
+                  _hasAdDate(data, 'offer_end_date')),
+        );
 
-    // -------------------------------
-    // FINAL MODEL
-    // -------------------------------
-    final draft = AdDraft(
+    return AdDraft(
       source: DraftSource.draft,
-      draftId: asNullableString(json['id']),
+      draftId: asNullableString(data['id']),
+      status: asNullableString(data['status']),
 
-      // BASIC
       title: title,
       countryId: country,
       locationId: location,
@@ -379,20 +389,15 @@ class AdDraft {
       categoryId: category,
       categoryLabel: category,
 
-      // MEDIA
       images: images,
       videoUrl: asNullableString(data['video']),
       videoFileId: asNullableString(
         data['video_media'] ?? data['video_media_id'] ?? data['video_file_id'],
       ),
 
-      // DETAILS
       attributes: attrs,
-
-      // DESCRIPTION
       description: description,
 
-      // PRICING
       priceType: priceType,
       price: price,
       priceUnit: priceUnit,
@@ -400,9 +405,7 @@ class AdDraft {
       offerPrice: offerPrice,
       offerStart: offerStart,
       offerEnd: offerEnd,
-      scheduleOfferDates: asBool(scheduleOfferDates),
+      scheduleOfferDates: scheduleOfferDates,
     );
-
-    return draft;
   }
 }

@@ -6,11 +6,13 @@ class BackgroundPicker extends StatelessWidget {
     super.key,
     required this.onSelect,
     required this.selectedColor,
+    required this.transparentSelected,
     required this.isApplying,
   });
 
   final ValueChanged<Color?> onSelect;
   final Color? selectedColor;
+  final bool transparentSelected;
   final bool isApplying;
 
   @override
@@ -34,9 +36,7 @@ class BackgroundPicker extends StatelessWidget {
           title: 'Background Color',
           trailing: isApplying ? 'Applying...' : null,
         ),
-
         const SizedBox(height: 12),
-
         SizedBox(
           height: 52,
           child: ListView.separated(
@@ -57,12 +57,10 @@ class BackgroundPicker extends StatelessWidget {
             itemCount: colors.length,
           ),
         ),
-
         const SizedBox(height: 14),
-
         _TransparentChip(
-          selected: selectedColor == null,
-          loading: selectedColor == null && isApplying,
+          selected: transparentSelected,
+          loading: transparentSelected && isApplying,
           onTap: () => onSelect(null),
         ),
       ],

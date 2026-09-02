@@ -6,6 +6,7 @@ import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/vali
 import 'package:africaonlinestores/features/ads/ads_form/utils/ad_form_validator.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
+import 'package:africaonlinestores/shared/enums/ads.dart';
 import 'package:flutter/widgets.dart';
 
 typedef StepValidator =
@@ -26,30 +27,26 @@ class CreateAdStepDef {
 class AdFormStepsBuilder {
   const AdFormStepsBuilder._();
 
-  static List<CreateAdStepDef> build({required AdCategorySchema schema}) {
+  static List<CreateAdStepDef> build({
+    required AdCategorySchema schema,
+    AdFormMode mode = AdFormMode.create,
+  }) {
     return [
-      // ---------------- Basic ----------------
-      const CreateAdStepDef(
+      CreateAdStepDef(
         label: 'Basic',
-        widget: BasicStep(),
+        widget: BasicStep(mode: mode),
         validator: _validateBasic,
       ),
-
-      // ---------------- Details ----------------
       CreateAdStepDef(
         label: 'Details',
         widget: DetailsStep(schema: schema),
         validator: _validateDetails,
       ),
-
-      // ---------------- Description ----------------
-      const CreateAdStepDef(
+      CreateAdStepDef(
         label: 'Description',
-        widget: DescriptionStep(),
+        widget: DescriptionStep(mode: mode),
         validator: _validateDescription,
       ),
-
-      // ---------------- Pricing ----------------
       CreateAdStepDef(
         label: 'Pricing',
         widget: PricingStep(schema: schema),
@@ -57,8 +54,6 @@ class AdFormStepsBuilder {
       ),
     ];
   }
-
-  // ---------------- Validators ----------------
 
   static ValidationResult _validateBasic(AdDraft draft, AdCategorySchema _) {
     return AdFormValidator.basic(draft);

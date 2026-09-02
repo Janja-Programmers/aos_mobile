@@ -1,9 +1,6 @@
 import 'dart:io';
 
 import 'package:africaonlinestores/core/core.dart';
-import 'package:africaonlinestores/core/media/application/media_services_provider.dart';
-import 'package:africaonlinestores/core/media/domain/media_asset.dart';
-import 'package:africaonlinestores/core/media/domain/media_policy.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/utils/background_colors.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/widgets/background_removal_await_dialog.dart';
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/widgets/edit_image/widgets/background_removal_confirm_dialog.dart';
@@ -39,6 +36,7 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
   bool _busy = false;
   bool _bgRemoved = false;
   bool _applyingBackground = false;
+  bool _backgroundSelectionMade = false;
 
   EditorToolAction? _activeTool;
 
@@ -46,6 +44,7 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
   List<Color>? _selectedGradient;
 
   File? _transparentFile;
+  String? _returnedFilePath;
 
   final List<File> _tempFiles = [];
 
@@ -58,7 +57,7 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
   // ================= CROP =================
 
   Future<void> _crop() async {
-    if (_activeTool != null) return;
+    if (_activeTool != null || _busy) return;
 
     setState(() => _activeTool = EditorToolAction.crop);
 
@@ -84,12 +83,16 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
       if (cropped == null) return;
 
       final file = File(cropped.path);
-
       _tempFiles.add(file);
 
       if (!mounted) return;
 
-      setState(() => _file = file);
+      setState(() {
+        _file = file;
+        if (_bgRemoved) {
+          _transparentFile = file;
+        }
+      });
     } finally {
       if (mounted) {
         setState(() => _activeTool = null);
@@ -100,7 +103,7 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
   // ================= ROTATE =================
 
   Future<void> _rotate() async {
-    if (_activeTool != null) return;
+    if (_activeTool != null || _busy) return;
 
     setState(() => _activeTool = EditorToolAction.rotate);
 
@@ -108,24 +111,25 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
       await Future<void>.delayed(Duration.zero);
 
       final bytes = await _file.readAsBytes();
-
       final image = img.decodeImage(bytes);
       if (image == null) return;
 
       final rotated = img.copyRotate(image, angle: 90);
-
       final dir = await getTemporaryDirectory();
-
       final path =
           '${dir.path}/rotated_${DateTime.now().millisecondsSinceEpoch}.png';
-
       final file = File(path)..writeAsBytesSync(img.encodePng(rotated));
 
       _tempFiles.add(file);
 
       if (!mounted) return;
 
-      setState(() => _file = file);
+      setState(() {
+        _file = file;
+        if (_bgRemoved) {
+          _transparentFile = file;
+        }
+      });
     } finally {
       if (mounted) {
         setState(() => _activeTool = null);
@@ -133,31 +137,11 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
     }
   }
 
-  // ================= COMPRESS =================
-
-  Future<void> _compress() async {
-    if (_selectedBgColor == null) return;
-
-    final prepared = await ref
-        .read(mediaPreparationServiceProvider)
-        .prepare(
-          media: AcquiredMedia.external(file: _file, kind: MediaKind.image),
-          useCase: MediaUseCase.adImage,
-        );
-
-    if (prepared.ownedByPreparation) {
-      _tempFiles.add(prepared.file);
-
-      if (!mounted) return;
-      setState(() => _file = prepared.file);
-    } else {
-      await prepared.discard();
-    }
-  }
-
   // ================= REMOVE BG =================
 
   Future<void> _removeBg() async {
+    if (_busy) return;
+
     final originalFile = _file;
 
     setState(() {
@@ -171,19 +155,24 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
       builder: (_) => BackgroundRemovalAwaitDialog(
         removeBg: () async {
           final controller = ref.read(adDraftControllerProvider.notifier);
-
-          final res = await controller.removeImageBackground(widget.index);
+          final res = await controller.requestImageBackgroundRemoval(
+            widget.index,
+          );
 
           if (res.isLeft) {
             throw Exception(res.leftOrNull!.message);
           }
 
-          final url = res.rightOrNull!;
-          final file = await urlToFile(url);
-
-          _tempFiles.add(file);
-
-          return file;
+          final generated = res.rightOrNull!;
+          try {
+            final file = await urlToFile(generated.url);
+            _tempFiles.add(file);
+            return file;
+          } finally {
+            // Background-removal output is only a temporary editing source.
+            // The draft remains unchanged until the final edited image uploads.
+            await controller.deleteMediaSilently(generated.fileId);
+          }
         },
       ),
     );
@@ -200,7 +189,9 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
         _file = originalFile;
         _transparentFile = null;
         _bgRemoved = false;
+        _backgroundSelectionMade = false;
         _selectedBgColor = null;
+        _selectedGradient = null;
       });
       return;
     }
@@ -218,6 +209,7 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
         _file = removedFile;
         _transparentFile = removedFile;
         _bgRemoved = true;
+        _backgroundSelectionMade = false;
         _selectedBgColor = null;
         _selectedGradient = null;
       });
@@ -226,89 +218,77 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
         _file = originalFile;
         _transparentFile = null;
         _bgRemoved = false;
+        _backgroundSelectionMade = false;
         _selectedBgColor = null;
         _selectedGradient = null;
       });
     }
   }
 
-  // ================= APPLY BACKGROUND =================
+  // ================= BACKGROUND SELECTION =================
 
-  Future<void> _applyBackground(Color? color) async {
-    if (_transparentFile == null) return;
+  void _applyBackground(Color? color) {
+    if (_transparentFile == null || _busy) return;
 
     setState(() {
+      _backgroundSelectionMade = true;
       _selectedBgColor = color;
       _selectedGradient = null;
     });
-
-    if (_applyingBackground) return;
-
-    setState(() => _applyingBackground = true);
-
-    try {
-      final dir = await getTemporaryDirectory();
-
-      final outputPath =
-          '${dir.path}/bg_${DateTime.now().millisecondsSinceEpoch}.png';
-
-      final resultPath = await compute(applyBackgroundInIsolate, {
-        'sourcePath': _transparentFile!.path,
-        'outputPath': outputPath,
-        'color': color?.toARGB32(),
-      });
-
-      final file = File(resultPath);
-
-      _tempFiles.add(file);
-
-      if (!mounted) return;
-
-      setState(() {
-        _file = file;
-      });
-    } finally {
-      if (mounted) {
-        setState(() => _applyingBackground = false);
-      }
-    }
   }
-  // ================= APPLY GRADIENT =================
 
-  Future<void> _applyGradient(List<Color> colors) async {
-    if (_transparentFile == null) return;
+  void _applyGradient(List<Color> colors) {
+    if (_transparentFile == null || _busy || colors.length < 2) return;
 
     setState(() {
-      _selectedGradient = colors;
-      _selectedBgColor = colors.first;
+      _backgroundSelectionMade = true;
+      _selectedGradient = List<Color>.unmodifiable(colors);
+      _selectedBgColor = null;
     });
+  }
 
-    if (_applyingBackground) return;
+  Future<void> _materializeBackground() async {
+    final source = _transparentFile;
+    if (!_bgRemoved || source == null || !_backgroundSelectionMade) return;
+
+    final gradient = _selectedGradient;
+    final color = _selectedBgColor;
+
+    // Transparent is a valid explicit selection and requires no re-encoding.
+    if (gradient == null && color == null) {
+      _file = source;
+      return;
+    }
 
     setState(() => _applyingBackground = true);
 
     try {
       final dir = await getTemporaryDirectory();
+      final timestamp = DateTime.now().microsecondsSinceEpoch;
 
-      final outputPath =
-          '${dir.path}/gradient_${DateTime.now().millisecondsSinceEpoch}.png';
-
-      final resultPath = await compute(applyGradientInIsolate, {
-        'sourcePath': _transparentFile!.path,
-        'outputPath': outputPath,
-        'startColor': colors[0].toARGB32(),
-        'endColor': colors[1].toARGB32(),
-      });
+      final String resultPath;
+      if (gradient != null) {
+        final outputPath = '${dir.path}/gradient_$timestamp.png';
+        resultPath = await compute(applyGradientInIsolate, {
+          'sourcePath': source.path,
+          'outputPath': outputPath,
+          'startColor': gradient[0].toARGB32(),
+          'endColor': gradient[1].toARGB32(),
+        });
+      } else {
+        final outputPath = '${dir.path}/bg_$timestamp.png';
+        resultPath = await compute(applyBackgroundInIsolate, {
+          'sourcePath': source.path,
+          'outputPath': outputPath,
+          'color': color!.toARGB32(),
+        });
+      }
 
       final file = File(resultPath);
-
       _tempFiles.add(file);
 
       if (!mounted) return;
-
-      setState(() {
-        _file = file;
-      });
+      setState(() => _file = file);
     } finally {
       if (mounted) {
         setState(() => _applyingBackground = false);
@@ -321,7 +301,7 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
   Future<void> _done() async {
     if (_busy) return;
 
-    if (_bgRemoved && _selectedBgColor == null) {
+    if (_bgRemoved && !_backgroundSelectionMade) {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Select a background')));
@@ -331,11 +311,18 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
     setState(() => _busy = true);
 
     try {
-      await _compress();
+      await _materializeBackground();
 
       if (!mounted) return;
 
+      _returnedFilePath = _file.path;
       Navigator.pop<File>(context, _file);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not apply image changes')),
+        );
+      }
     } finally {
       if (mounted) {
         setState(() => _busy = false);
@@ -348,14 +335,52 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
   @override
   void dispose() {
     for (final file in _tempFiles) {
+      if (file.path == _returnedFilePath) continue;
       try {
         if (file.existsSync()) file.deleteSync();
-      } catch (_) {}
+      } on FileSystemException {
+        continue;
+      }
     }
     super.dispose();
   }
 
   // ================= UI =================
+
+  BoxDecoration _previewDecoration() {
+    final gradient = _selectedGradient;
+    if (gradient != null && gradient.length >= 2) {
+      return BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: gradient,
+        ),
+      );
+    }
+
+    return BoxDecoration(color: _selectedBgColor);
+  }
+
+  Widget _buildPreview() {
+    final transparent = _transparentFile;
+    if (!_bgRemoved || transparent == null) {
+      return Image.file(_file, key: ValueKey(_file.path), fit: BoxFit.contain);
+    }
+
+    return FittedBox(
+      child: DecoratedBox(
+        decoration: _previewDecoration(),
+        child: Image.file(
+          transparent,
+          key: ValueKey(
+            '${transparent.path}:${_selectedBgColor?.toARGB32()}:${_selectedGradient?.map((c) => c.toARGB32()).join(',')}',
+          ),
+          fit: BoxFit.none,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -365,7 +390,7 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
           title: const Text('Edit Image'),
           leading: IconButton(
             icon: const Icon(Icons.close),
-            onPressed: () => Navigator.pop(context),
+            onPressed: _busy ? null : () => Navigator.pop(context),
           ),
           actions: [
             _busy
@@ -386,22 +411,10 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
               child: Center(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
-                  child: Stack(
-                    alignment: Alignment.center,
-                    children: [
-                      Image.file(
-                        _file,
-                        key: ValueKey(_file.path),
-                        fit: BoxFit.contain,
-                      ),
-                      if (_applyingBackground)
-                        const CircularProgressIndicator(strokeWidth: 2.5),
-                    ],
-                  ),
+                  child: _buildPreview(),
                 ),
               ),
             ),
-
             EditorPanel(
               onCrop: _crop,
               onRotate: _rotate,
@@ -413,6 +426,10 @@ class _EditImageScreenState extends ConsumerState<EditImageScreen> {
               applyingBackground: _applyingBackground,
               selectedBackgroundColor: _selectedBgColor,
               selectedGradient: _selectedGradient,
+              transparentSelected:
+                  _backgroundSelectionMade &&
+                  _selectedBgColor == null &&
+                  _selectedGradient == null,
               activeTool: _activeTool,
             ),
           ],

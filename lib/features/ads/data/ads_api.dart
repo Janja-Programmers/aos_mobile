@@ -127,7 +127,7 @@ class AdsApi implements AdLocationRepository {
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
-      return Either.left(const Failure('Failed to update draft.'));
+      return Either.left(const Failure('Failed to update listing.'));
     }
   }
 
@@ -154,7 +154,7 @@ class AdsApi implements AdLocationRepository {
     try {
       final res = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.submitAdDraftEndpoint,
-        queryParameters: {'draft_id': draftId},
+        data: {'draft_id': draftId},
       );
       return unwrapFrappe(res);
     } on DioException catch (e) {
@@ -188,14 +188,14 @@ class AdsApi implements AdLocationRepository {
     try {
       final res = await _dio.post<Map<String, dynamic>>(
         ApiEndpoints.setAdStatusEndpoint,
-        queryParameters: {'ad_id': adId, 'action': action},
+        data: {'ad_id': adId, 'action': action},
       );
 
       return unwrapFrappe(res);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
-      return Either.left(const Failure('Failed to save draft.'));
+      return Either.left(const Failure('Failed to update listing status.'));
     }
   }
 
@@ -238,11 +238,9 @@ class AdsApi implements AdLocationRepository {
           'price_type': priceType!.trim(),
         if (promotionType?.trim().isNotEmpty ?? false)
           'promotion_type': promotionType!.trim(),
-
         'price_min': ?priceMin,
         'price_max': ?priceMax,
         'rating_min': ?ratingMin,
-
         'limit': limit,
         'offset': offset,
       };
@@ -262,65 +260,20 @@ class AdsApi implements AdLocationRepository {
   }
 
   Future<Either<Failure, Map<String, dynamic>>> listAdDrafts({
-    String? locationId,
-    String? categoryId,
-    String? q,
-    String? sort,
-    String? promotionType,
-    String? priceType,
-    double? priceMin,
-    double? priceMax,
-    double? ratingMin,
     int limit = 20,
     int offset = 0,
   }) async {
     try {
-      if (sort != null && !_allowedSorts.contains(sort)) {
-        return Either.left(Failure('Invalid sort value: $sort'));
-      }
-
-      if (promotionType != null &&
-          !_allowedPromotionTypes.contains(promotionType)) {
-        return Either.left(Failure('Invalid promotion type: $promotionType'));
-      }
-
-      if (priceType != null && !_allowedPriceTypes.contains(priceType)) {
-        return Either.left(Failure('Invalid price type: $priceType'));
-      }
-
-      final queryParams = <String, dynamic>{
-        if (locationId?.trim().isNotEmpty ?? false)
-          'location': locationId!.trim(),
-        if (categoryId?.trim().isNotEmpty ?? false)
-          'category': categoryId!.trim(),
-        if (q?.trim().isNotEmpty ?? false) 'q': q!.trim(),
-        if (sort?.trim().isNotEmpty ?? false) 'sort': sort!.trim(),
-        if (promotionType?.trim().isNotEmpty ?? false)
-          'promotion_type': promotionType!.trim(),
-        if (priceType?.trim().isNotEmpty ?? false)
-          'price_type': priceType!.trim(),
-
-        'price_min': ?priceMin,
-
-        'price_max': ?priceMax,
-
-        'rating_min': ?ratingMin,
-
-        'limit': limit,
-        'offset': offset,
-      };
-
       final res = await _client.get(
         ApiEndpoints.listAdDraftsEndpoint,
-        marketContext: true,
-        queryParameters: queryParams,
+        queryParameters: <String, dynamic>{'limit': limit, 'offset': offset},
       );
 
       return unwrapFrappe(res);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
-      return Either.left(const Failure('Failed to fetch ads.'));
+      return Either.left(const Failure('Failed to fetch drafts.'));
     }
   }
 
@@ -379,19 +332,19 @@ class AdsApi implements AdLocationRepository {
     }
   }
 
-  Future<Either<Failure, Map<String, dynamic>>> getAdDraft({
+  Future<Either<Failure, Map<String, dynamic>>> getMyAdDraft({
     required String draftId,
   }) async {
     try {
       final res = await _dio.get<Map<String, dynamic>>(
-        ApiEndpoints.getAdDraftEndpoint,
+        ApiEndpoints.getMyAdDraftEndpoint,
         queryParameters: {'draft_id': draftId},
       );
       return unwrapFrappe(res);
     } on DioException catch (e) {
       return Either.left(mapDioException(e));
     } catch (_) {
-      return Either.left(const Failure('Failed to fetch ad details.'));
+      return Either.left(const Failure('Failed to fetch draft.'));
     }
   }
 

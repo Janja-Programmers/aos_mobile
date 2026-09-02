@@ -15,8 +15,7 @@ class ServicePricingPolicy implements PricingPolicy {
 
   @override
   bool requireUnit(AdDraft d, PricingSchema schema) {
-    if (schema.allowedUnits.isEmpty) return false;
-
+    // Backend SSOT: amount-based service pricing always requires a unit.
     return d.priceType == 'Fixed' || d.priceType == 'Negotiable';
   }
 

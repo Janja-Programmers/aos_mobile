@@ -28,6 +28,7 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
   final Ref _ref;
 
   AdDraft _draft;
+  int _loadGeneration = 0;
 
   AdDraft get draft => _draft;
   final _deletingMedia = <String>{};
@@ -35,73 +36,113 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
   // ================= SETUP =================
 
   void createNew() {
+    _loadGeneration += 1;
     _setDraft(const AdDraft(source: DraftSource.create));
   }
 
   Future<void> loadFromDraft(String draftId) async {
+    final generation = _beginLoad();
     final api = _ref.read(adsApiProvider);
+    final res = await api.getMyAdDraft(draftId: draftId);
 
-    state = const AsyncValue.loading();
-
-    final res = await api.getAdDraft(draftId: draftId);
+    if (!_isCurrentLoad(generation)) return;
 
     if (res.isLeft) {
       state = AsyncValue.error(res.leftOrNull!, StackTrace.current);
       return;
     }
 
-    final raw = res.rightOrNull!;
-    final draftData = raw['data'];
+    try {
+      final response = res.rightOrNull!;
+      final data = asJsonMap(response['data']);
+      final item = asJsonMap(data['item']);
+      if (item.isEmpty) {
+        throw const FormatException('Missing draft item');
+      }
+      final draft = AdDraft.fromDraft(item);
 
-    final draft = AdDraft.fromDraft(asJsonMap(draftData));
+      if (!_isCurrentLoad(generation)) return;
 
-    _draft = draft.copyWith(source: DraftSource.draft, draftId: draftId);
-
-    state = AsyncValue.data(_draft);
+      _draft = draft.copyWith(source: DraftSource.draft, draftId: draftId);
+      state = AsyncValue.data(_draft);
+    } catch (_, stackTrace) {
+      if (!_isCurrentLoad(generation)) return;
+      state = AsyncValue.error(
+        const Failure('Failed to load ad draft.'),
+        stackTrace,
+      );
+    }
   }
 
   Future<void> loadFromAd(String adId) async {
+    final generation = _beginLoad();
     final api = _ref.read(adsApiProvider);
-
-    state = const AsyncValue.loading();
-
     final res = await api.getAd(adId: adId);
+
+    if (!_isCurrentLoad(generation)) return;
 
     if (res.isLeft) {
       state = AsyncValue.error(res.leftOrNull!, StackTrace.current);
       return;
     }
 
-    final draft = AdDraft.fromAd(res.rightOrNull!);
+    try {
+      final response = res.rightOrNull!;
+      final data = asJsonMap(response['data']);
+      final item = asJsonMap(data['item']);
+      final draft = AdDraft.fromAd(item);
 
-    _draft = draft.copyWith(source: DraftSource.edit, adId: adId);
+      if (!_isCurrentLoad(generation)) return;
 
-    state = AsyncValue.data(_draft);
+      _draft = draft.copyWith(source: DraftSource.edit, adId: adId);
+      state = AsyncValue.data(_draft);
+    } catch (_, stackTrace) {
+      if (!_isCurrentLoad(generation)) return;
+      state = AsyncValue.error(
+        const Failure('Failed to load ad details.'),
+        stackTrace,
+      );
+    }
   }
 
   Future<void> loadFromMyAd(String adId) async {
+    final generation = _beginLoad();
     final api = _ref.read(adsApiProvider);
-
-    state = const AsyncValue.loading();
-
     final res = await api.getMyAd(adId: adId);
+
+    if (!_isCurrentLoad(generation)) return;
 
     if (res.isLeft) {
       state = AsyncValue.error(res.leftOrNull!, StackTrace.current);
       return;
     }
 
-    final response = res.rightOrNull!;
+    try {
+      final response = res.rightOrNull!;
+      final data = asJsonMap(response['data']);
+      final item = asJsonMap(data['item']);
+      final draft = AdDraft.fromAd(item);
 
-    final data = asJsonMap(response['data']);
-    final item = asJsonMap(data['item']);
+      if (!_isCurrentLoad(generation)) return;
 
-    final draft = AdDraft.fromAd(item);
-
-    _draft = draft.copyWith(source: DraftSource.edit, adId: adId);
-
-    state = AsyncValue.data(_draft);
+      _draft = draft.copyWith(source: DraftSource.edit, adId: adId);
+      state = AsyncValue.data(_draft);
+    } catch (_, stackTrace) {
+      if (!_isCurrentLoad(generation)) return;
+      state = AsyncValue.error(
+        const Failure('Failed to load ad details.'),
+        stackTrace,
+      );
+    }
   }
+
+  int _beginLoad() {
+    final generation = ++_loadGeneration;
+    state = const AsyncValue.loading();
+    return generation;
+  }
+
+  bool _isCurrentLoad(int generation) => generation == _loadGeneration;
 
   // ================= BASIC =================
 
@@ -148,21 +189,50 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
   // ================= PRICING =================
 
   void setPrice(double? v) {
-    _setDraft(_draft.copyWith(price: v));
+    _setDraft(
+      v == null ? _draft.copyWith(clearPrice: true) : _draft.copyWith(price: v),
+    );
   }
 
   void setPriceUnit(String? v) {
+    final clean = v?.trim() ?? '';
     _setDraft(
-      _draft.copyWith(priceUnit: (v == null || v.trim().isEmpty) ? null : v),
+      clean.isEmpty
+          ? _draft.copyWith(clearPriceUnit: true)
+          : _draft.copyWith(priceUnit: clean),
     );
   }
 
   void clearPricing() {
-    _setDraft(_draft.copyWith());
+    _setDraft(_draft.copyWith(clearPricing: true, scheduleOfferDates: false));
   }
 
   void setPriceType(String? v) {
-    final type = (v == null || v.trim().isEmpty) ? null : v;
+    final type = (v == null || v.trim().isEmpty) ? null : v.trim();
+
+    if (type == null) {
+      _setDraft(
+        _draft.copyWith(
+          clearPriceType: true,
+          scheduleOfferDates: false,
+          clearAllOffer: true,
+        ),
+      );
+      return;
+    }
+
+    if (type == 'Contact for price' || type == 'Free') {
+      _setDraft(
+        _draft.copyWith(
+          priceType: type,
+          clearPrice: true,
+          clearPriceUnit: true,
+          scheduleOfferDates: false,
+          clearAllOffer: true,
+        ),
+      );
+      return;
+    }
 
     if (type != 'Fixed') {
       _setDraft(
@@ -183,6 +253,7 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
       _setDraft(
         _draft.copyWith(
           scheduleOfferDates: false,
+          clearOfferPrice: true,
           clearOfferStart: true,
           clearOfferEnd: true,
         ),
@@ -240,14 +311,12 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
 
   // ================= MEDIA =================
 
-  /// Replace entire image list safely
   void replaceImages(List<AdMediaImage> images) {
     if (images.isEmpty) {
       _setDraft(_draft.copyWith(images: []));
       return;
     }
 
-    // Ensure first image is primary
     final normalized = <AdMediaImage>[];
 
     for (int i = 0; i < images.length; i++) {
@@ -257,13 +326,11 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
     _setDraft(_draft.copyWith(images: normalized));
   }
 
-  /// Reorder and set primary
   void setPrimaryImage(int index) {
     if (index < 0 || index >= _draft.images.length) return;
     if (index == 0) return;
 
     final images = List<AdMediaImage>.from(_draft.images);
-
     final selected = images.removeAt(index);
     images.insert(0, selected);
 
@@ -274,91 +341,85 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
     if (index < 0 || index >= _draft.images.length) return;
 
     final image = _draft.images[index];
-
     final next = List<AdMediaImage>.from(_draft.images)..removeAt(index);
     replaceImages(next);
+
     if (image.fileId.trim().isNotEmpty) {
       unawaited(deleteMediaSilently(image.fileId));
     }
   }
 
   Future<void> deleteMediaSilently(String mediaId) async {
-    if (_deletingMedia.contains(mediaId)) return;
+    if (mediaId.trim().isEmpty || _deletingMedia.contains(mediaId)) return;
 
     _deletingMedia.add(mediaId);
-
     final api = _ref.read(mediaUploadApiProvider);
 
-    await api.deleteMedia(mediaId: mediaId);
-
-    _deletingMedia.remove(mediaId);
+    try {
+      await api.deleteMedia(mediaId: mediaId);
+    } on Object {
+      return;
+    } finally {
+      _deletingMedia.remove(mediaId);
+    }
   }
 
-  Future<Either<Failure, String>> removeImageBackground(int index) async {
+  Future<Either<Failure, AdMediaImage>> requestImageBackgroundRemoval(
+    int index,
+  ) async {
     if (index < 0 || index >= _draft.images.length) {
       return Either.left(const Failure('Invalid image index'));
     }
 
-    final api = _ref.read(mediaUploadApiProvider);
-
     final image = _draft.images[index];
-
-    if (image.fileId.isEmpty) {
+    if (image.fileId.trim().isEmpty) {
       return Either.left(const Failure('Image has no media ID'));
     }
 
-    final res = await api.removeBackground(
-      mediaId: image.fileId,
-      resultPurpose: MediaUploadPurpose.adImage,
-    );
+    final res = await _ref
+        .read(mediaUploadApiProvider)
+        .removeBackground(
+          mediaId: image.fileId,
+          resultPurpose: MediaUploadPurpose.adImage,
+        );
 
     if (res.isLeft) {
       return Either.left(res.leftOrNull!);
     }
 
     final uploaded = res.rightOrNull!;
-
-    final newImage = image.copyWith(
-      fileId: uploaded.mediaId,
-      url: uploaded.url,
-    );
-
-    final images = List<AdMediaImage>.from(_draft.images);
-
-    images[index] = newImage;
-
-    replaceImages(images);
-
-    unawaited(deleteMediaSilently(image.fileId));
-
-    return Either.right(uploaded.url);
+    return Either.right(AdMediaImage.fromUpload(uploaded));
   }
 
-  // ----------------- EDIT IMAGE -----------------
-  Future<void> replaceImageAt(int index, File file) async {
-    if (index < 0 || index >= _draft.images.length) return;
+  Future<Either<Failure, AdMediaImage>> replaceImageAt(
+    int index,
+    File file,
+  ) async {
+    if (index < 0 || index >= _draft.images.length) {
+      return Either.left(const Failure('Invalid image index'));
+    }
 
     final old = _draft.images[index];
-
     final res = await _ref
         .read(mediaUploadCoordinatorProvider)
         .uploadFile(file: file, useCase: MediaUseCase.adImage);
-    if (res.isLeft) return;
 
-    final uploadedFile = res.rightOrNull!;
-    final uploaded = AdMediaImage.fromUpload(uploadedFile);
+    if (res.isLeft) {
+      return Either.left(res.leftOrNull!);
+    }
 
+    final uploaded = AdMediaImage.fromUpload(res.rightOrNull!);
     final images = List<AdMediaImage>.from(_draft.images);
+    final replacement = uploaded.copyWith(isPrimary: images[index].isPrimary);
 
-    final isPrimary = images[index].isPrimary;
-
-    images[index] = uploaded.copyWith(isPrimary: isPrimary);
-
+    images[index] = replacement;
     replaceImages(images);
 
-    if (old.fileId.isNotEmpty) {
+    if (old.fileId.trim().isNotEmpty) {
       unawaited(deleteMediaSilently(old.fileId));
     }
+
+    return Either.right(replacement);
   }
 
   Future<Either<Failure, String>> uploadAndAddImage(
@@ -378,11 +439,9 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
 
     final uploadedFile = res.rightOrNull!;
     final image = AdMediaImage.fromUpload(uploadedFile);
-
     final next = List<AdMediaImage>.from(_draft.images);
 
     next.add(image.copyWith(isPrimary: next.isEmpty));
-
     replaceImages(next);
 
     return Either.right(image.url);
@@ -405,7 +464,6 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
     }
 
     final uploaded = res.rightOrNull!;
-
     final url = uploaded.url;
     final mediaId = uploaded.mediaId;
 
@@ -432,6 +490,7 @@ class AdDraftController extends StateNotifier<AsyncValue<AdDraft>> {
   }
 
   void reset() {
+    _loadGeneration += 1;
     _setDraft(const AdDraft(source: DraftSource.create));
   }
 

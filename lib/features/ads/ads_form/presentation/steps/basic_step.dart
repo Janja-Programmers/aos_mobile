@@ -13,7 +13,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 class BasicStep extends ConsumerStatefulWidget {
-  const BasicStep({super.key});
+  const BasicStep({super.key, this.mode = AdFormMode.create});
+
+  final AdFormMode mode;
 
   @override
   ConsumerState<BasicStep> createState() => _BasicStepState();
@@ -41,12 +43,9 @@ class _BasicStepState extends ConsumerState<BasicStep> {
   @override
   Widget build(BuildContext context) {
     final draftAsync = ref.watch(adDraftControllerProvider);
-
-    /// Always keep latest draft even during AsyncLoading
     final draft =
         draftAsync.value ?? ref.read(adDraftControllerProvider.notifier).draft;
 
-    /// Sync controller with draft safely
     if (_titleCtrl.text != draft.title) {
       _titleCtrl.value = TextEditingValue(
         text: draft.title,
@@ -54,8 +53,7 @@ class _BasicStepState extends ConsumerState<BasicStep> {
       );
     }
 
-    final flowState = ref.watch(adFormControllerProvider(AdFormMode.create));
-
+    final flowState = ref.watch(adFormControllerProvider(widget.mode));
     final showErrors = flowState.attempted.contains(flowState.index);
 
     final validation = AdFormValidator.basic(draft);
@@ -67,10 +65,8 @@ class _BasicStepState extends ConsumerState<BasicStep> {
       keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 120),
       children: [
-        /// ---------------- TITLE ----------------
         const SectionTitle(title: 'Title *'),
         const SizedBox(height: 10),
-
         TextField(
           controller: _titleCtrl,
           maxLength: 80,
@@ -81,13 +77,9 @@ class _BasicStepState extends ConsumerState<BasicStep> {
             errorText: titleError,
           ).applyDefaults(inputDecorationTheme),
         ),
-
         const SizedBox(height: 18),
-
-        /// ---------------- LOCATION ----------------
         const SectionTitle(title: 'Location *'),
         const SizedBox(height: 10),
-
         PickerField(
           value: draft.locationLabel,
           leading: const Icon(Icons.place_outlined),
@@ -110,18 +102,11 @@ class _BasicStepState extends ConsumerState<BasicStep> {
                 .setLocation(id: id, label: label);
           },
         ),
-
         const SizedBox(height: 24),
-
-        /// ---------------- MEDIA ----------------
         const MediaSection(),
-
         const SizedBox(height: 24),
-
-        /// ---------------- CATEGORY ----------------
         const SectionTitle(title: 'Category *'),
         const SizedBox(height: 10),
-
         PickerField(
           value: draft.categoryLabel,
           leading: const Icon(Icons.category_outlined),

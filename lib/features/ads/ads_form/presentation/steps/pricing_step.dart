@@ -7,6 +7,7 @@ import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/pric
 import 'package:africaonlinestores/features/ads/ads_form/presentation/steps/pricing/service_unit_picker.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_schema.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
+import 'package:africaonlinestores/features/ads/shared/utils/pricing_rules.dart';
 import 'package:africaonlinestores/shared/enums/ads.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,31 +21,28 @@ class PricingStep extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final pricing = schema.pricing;
 
-    final allowedTypes = pricing.allowedTypes;
-    final allowedUnits = pricing.allowedUnits;
-
-    final visiblePriceTypes = allowedTypes
-        .where((t) => t != 'Contact for price')
-        .toList();
-
-    /// Schema capabilities
-    final supportsServiceUnits = allowedUnits.isNotEmpty;
-    final supportsContactPrice = allowedTypes.contains('Contact for price');
-
     if (pricing.requirement == PricingRequirement.hidden) {
       return const SizedBox.shrink();
     }
 
-    final draftAsync = ref.watch(adDraftControllerProvider);
+    final allowedTypes = allowedPriceTypesForSchema(pricing);
+    final allowedUnits = pricing.allowedUnits;
+    final visiblePriceTypes = allowedTypes
+        .where((type) => type != 'Contact for price')
+        .toList(growable: false);
 
+    final supportsContactPrice = allowedTypes.contains('Contact for price');
+    final supportsServiceUnits = allowedUnits.isNotEmpty;
+
+    final draftAsync = ref.watch(adDraftControllerProvider);
     final draft =
         draftAsync.value ?? ref.read(adDraftControllerProvider.notifier).draft;
-
     final ctrl = ref.read(adDraftControllerProvider.notifier);
 
-    /// Draft state (user choice)
-    final isContactMode = draft.priceType == 'Contact for price';
-    final isFixedPrice = draft.priceType == 'Fixed';
+    final priceType = resolvedPriceType(draft.priceType, pricing);
+    final isContactMode = priceType == 'Contact for price';
+    final isFixedPrice = priceType == 'Fixed';
+    final needsAmount = typeNeedsAmount(priceType);
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 120),
@@ -53,75 +51,71 @@ class PricingStep extends ConsumerWidget {
         Text('Set Pricing', style: context.h5),
         const SizedBox(height: 16),
 
-        /// =========================
-        /// VISIBILITY TOGGLE
-        /// =========================
         if (supportsContactPrice)
           PriceVisibilityToggle(
-            priceType: draft.priceType,
+            priceType: priceType,
             onSpecify: () {
-              if (isContactMode) {
-                ctrl.setPriceType('Fixed');
-              }
+              if (!isContactMode) return;
+              final next = visiblePriceTypes.contains('Fixed')
+                  ? 'Fixed'
+                  : (visiblePriceTypes.isEmpty
+                        ? null
+                        : visiblePriceTypes.first);
+              if (next != null) ctrl.setPriceType(next);
             },
             onContact: () {
-              if (!isContactMode) {
-                ctrl.setPriceType('Contact for price');
-                ctrl.setPrice(null);
-                ctrl.setPriceUnit(null);
-                ctrl.setOfferPrice(null);
-              }
+              if (isContactMode) return;
+              ctrl.setPriceType('Contact for price');
+              ctrl.setPrice(null);
+              ctrl.setPriceUnit(null);
+              ctrl.setOfferPrice(null);
             },
           ),
 
-        const SizedBox(height: 20),
+        if (supportsContactPrice) const SizedBox(height: 20),
 
-        /// =========================
-        /// CONTACT MODE
-        /// =========================
         if (isContactMode) const ContactInfoCard(),
 
-        /// =========================
-        /// SPECIFY PRICE
-        /// =========================
         if (!isContactMode) ...[
-          PriceAmountField(
-            price: draft.price,
-            onChanged: (value) {
-              ctrl.setPrice(value);
+          if (needsAmount) ...[
+            PriceAmountField(
+              price: draft.price,
+              onChanged: (value) {
+                ctrl.setPrice(value);
 
-              final offer = draft.offerPrice;
-
-              if (offer != null && value != null && offer >= value) {
-                ctrl.setOfferPrice(null);
-              }
-            },
-          ),
-
-          /// =========================
-          /// SERVICE UNIT
-          /// =========================
-          if (supportsServiceUnits)
-            ServiceUnitPicker(
-              units: allowedUnits,
-              selected: draft.priceUnit,
-              onChanged: ctrl.setPriceUnit,
+                final offer = draft.offerPrice;
+                if (offer != null && value != null && offer >= value) {
+                  ctrl.setOfferPrice(null);
+                }
+              },
             ),
-
-          const SizedBox(height: 20),
+            if (schema.category.isService &&
+                needsAmount &&
+                allowedUnits.isEmpty)
+              Padding(
+                padding: const EdgeInsets.only(top: 10),
+                child: Text(
+                  'Fixed or negotiable pricing is unavailable because this service category has no price units configured. Choose another permitted price type.',
+                  style: context.pMuted,
+                ),
+              ),
+            if (supportsServiceUnits)
+              ServiceUnitPicker(
+                units: allowedUnits,
+                selected: draft.priceUnit,
+                onChanged: ctrl.setPriceUnit,
+              ),
+            const SizedBox(height: 20),
+          ],
 
           PriceTypePicker(
-            selected: draft.priceType,
+            selected: priceType,
             options: visiblePriceTypes,
             onChanged: ctrl.setPriceType,
           ),
 
-          const SizedBox(height: 20),
-
-          /// =========================
-          /// OFFER SECTION
-          /// =========================
-          if (isFixedPrice)
+          if (isFixedPrice) ...[
+            const SizedBox(height: 20),
             OfferSection(
               price: draft.price,
               offerPrice: draft.offerPrice,
@@ -133,6 +127,7 @@ class PricingStep extends ConsumerWidget {
               onEndChanged: ctrl.setOfferEnd,
               onScheduleChanged: ctrl.setScheduleOfferDates,
             ),
+          ],
         ],
       ],
     );

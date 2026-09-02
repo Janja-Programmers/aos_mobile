@@ -130,33 +130,32 @@ class AllAdsScreen extends ConsumerWidget {
                 ),
               ),
 
-            if (isWishlist)
-              SliverPersistentHeader(
-                pinned: true,
-                delegate: StickyHeaderDelegate(
-                  height: 58,
-                  child: _WishlistToolbar(
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: StickyHeaderDelegate(
+                height: 58,
+                child: _AdsToolbar(
+                  selectedSort: state.selectedSort,
+                  hasFilters: state.hasFilters,
+                  onSort: () => showAdsSortSheet(
+                    context,
                     selectedSort: state.selectedSort,
-                    hasFilters: state.hasFilters,
-                    onSort: () => showAdsSortSheet(
-                      context,
-                      selectedSort: state.selectedSort,
-                      onChanged: controller.setSortType,
-                    ),
-                    onFilter: () => showAdsFilterSheet(
-                      context,
-                      initialPriceMin: state.filterMinPrice,
-                      initialPriceMax: state.filterMaxPrice,
-                      initialRatingMin: state.filterMinRating,
-                      initialVerifiedSellers: state.filterVerifiedSellers,
-                      showVerifiedSellerFilter: true,
-                      onApply: controller.applyFilters,
-                    ),
-                    onToggleView: controller.toggleView,
-                    view: state.view,
+                    onChanged: controller.setSortType,
                   ),
+                  onFilter: () => showAdsFilterSheet(
+                    context,
+                    initialPriceMin: state.filterMinPrice,
+                    initialPriceMax: state.filterMaxPrice,
+                    initialRatingMin: state.filterMinRating,
+                    initialVerifiedSellers: state.filterVerifiedSellers,
+                    showVerifiedSellerFilter: isWishlist,
+                    onApply: controller.applyFilters,
+                  ),
+                  onToggleView: controller.toggleView,
+                  view: state.view,
                 ),
               ),
+            ),
 
             _buildContent(state, context),
 
@@ -347,8 +346,8 @@ class _WishlistSearchFieldState extends State<_WishlistSearchField> {
   }
 }
 
-class _WishlistToolbar extends StatelessWidget {
-  const _WishlistToolbar({
+class _AdsToolbar extends StatelessWidget {
+  const _AdsToolbar({
     required this.selectedSort,
     required this.hasFilters,
     required this.onSort,

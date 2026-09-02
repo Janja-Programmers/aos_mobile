@@ -1,6 +1,7 @@
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/features/ads/ads_form/utils/ad_form_payload.dart';
+import 'package:africaonlinestores/features/ads/ads_form/utils/ad_update_contract.dart';
 import 'package:africaonlinestores/features/ads/ads_form/utils/cancel_action.dart';
 import 'package:africaonlinestores/features/ads/data/ads_api.dart';
 import 'package:africaonlinestores/features/ads/domain/ad_draft.dart';
@@ -15,28 +16,19 @@ final adActionsControllerProvider = Provider<AdActionsController>((ref) {
 });
 
 class AdActionsController {
+  AdActionsController(this.api);
+
   final AdsApi api;
   bool _isSavingDraft = false;
 
-  AdActionsController(this.api);
-
-  // -------------------------------
-  // SUBMIT AD
-  // -------------------------------
   Future<Either<Failure, Map<String, dynamic>>> submitAd({
     required AdDraft draft,
     required Map<String, dynamic> payload,
   }) async {
     switch (draft.source) {
-      // -------------------------------
-      // NEW AD → CREATE DIRECTLY
-      // -------------------------------
       case DraftSource.create:
         return api.createAd(payload: payload);
 
-      // -------------------------------
-      // EXISTING DRAFT → UPDATE + SUBMIT
-      // -------------------------------
       case DraftSource.draft:
         if (draft.draftId == null) {
           return Either.left(
@@ -53,9 +45,6 @@ class AdActionsController {
 
         return api.submitAdDraft(draftId: draft.draftId!);
 
-      // -------------------------------
-      // EDIT EXISTING AD
-      // -------------------------------
       case DraftSource.edit:
         if (draft.adId == null) {
           return Either.left(
@@ -63,18 +52,22 @@ class AdActionsController {
           );
         }
 
-        return api.updateAd(adId: draft.adId!, payload: payload);
+        final contract = AdUpdateContract.payloadForStatus(
+          status: draft.status ?? '',
+          candidate: payload,
+        );
+        if (contract.isLeft) {
+          return Either.left(contract.leftOrNull!);
+        }
+
+        return api.updateAd(adId: draft.adId!, payload: contract.rightOrNull!);
     }
   }
 
-  // -------------------------------
-  // SAVE DRAFT
-  // -------------------------------
   Future<Either<Failure, Map<String, dynamic>>> saveDraft({
     required AdDraft draft,
     required Map<String, dynamic> payload,
   }) async {
-    // 🔒 HARD LOCK (prevents race condition)
     if (_isSavingDraft) {
       return Either.left(const Failure('Draft save in progress'));
     }
@@ -98,31 +91,22 @@ class AdActionsController {
             payload: payload,
           );
         case DraftSource.edit:
-          return Either.right({});
+          return Either.right(<String, dynamic>{});
       }
     } finally {
       _isSavingDraft = false;
     }
   }
 
-  // -------------------------------
-  // HANDLE CANCEL (PURE LOGIC)
-  // -------------------------------
   Future<Either<Failure, void>> handleCancel({
     required AdDraft draft,
     required AdCategorySchema schema,
     required CancelAction action,
   }) async {
-    // -------------------------------
-    // DISCARD → DO NOTHING
-    // -------------------------------
     if (action == CancelAction.discard) {
       return Either.right(null);
     }
 
-    // -------------------------------
-    // SAVE & EXIT
-    // -------------------------------
     if (action == CancelAction.saveAndExit) {
       final payload = AdFormPayloadBuilder.build(d: draft, schema: schema);
       final res = await saveDraft(draft: draft, payload: payload);

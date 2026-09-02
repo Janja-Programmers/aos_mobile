@@ -6,30 +6,38 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_recognition_error.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
+bool isSpeechTimeoutError(String? errorCode) {
+  return errorCode?.trim().toLowerCase() == 'error_speech_timeout';
+}
+
 class VoiceInputState {
   const VoiceInputState({
     this.isAvailable = false,
     this.isListening = false,
     this.lastWords = '',
     this.error,
+    this.timedOut = false,
   });
 
   final bool isAvailable;
   final bool isListening;
   final String lastWords;
   final String? error;
+  final bool timedOut;
 
   VoiceInputState copyWith({
     bool? isAvailable,
     bool? isListening,
     String? lastWords,
     Object? error = _keepError,
+    bool? timedOut,
   }) {
     return VoiceInputState(
       isAvailable: isAvailable ?? this.isAvailable,
       isListening: isListening ?? this.isListening,
       lastWords: lastWords ?? this.lastWords,
       error: identical(error, _keepError) ? this.error : error as String?,
+      timedOut: timedOut ?? this.timedOut,
     );
   }
 }
@@ -60,6 +68,7 @@ class VoiceInputController extends StateNotifier<VoiceInputState> {
           isAvailable: false,
           isListening: false,
           error: 'Microphone permission denied',
+          timedOut: false,
         );
         return;
       }
@@ -72,6 +81,7 @@ class VoiceInputController extends StateNotifier<VoiceInputState> {
             isAvailable: false,
             isListening: false,
             error: 'Speech recognition permission denied',
+            timedOut: false,
           );
           return;
         }
@@ -81,7 +91,20 @@ class VoiceInputController extends StateNotifier<VoiceInputState> {
         onError: (SpeechRecognitionError error) {
           _clearAutoStopTimer();
 
-          state = state.copyWith(isListening: false, error: error.errorMsg);
+          if (isSpeechTimeoutError(error.errorMsg)) {
+            state = state.copyWith(
+              isListening: false,
+              error: null,
+              timedOut: true,
+            );
+            return;
+          }
+
+          state = state.copyWith(
+            isListening: false,
+            error: error.errorMsg,
+            timedOut: false,
+          );
         },
         onStatus: (status) {
           if (status == 'done' || status == 'notListening') {
@@ -98,6 +121,7 @@ class VoiceInputController extends StateNotifier<VoiceInputState> {
         isAvailable: available,
         isListening: false,
         error: available ? null : 'Speech recognition unavailable',
+        timedOut: false,
       );
     } catch (_) {
       _initialized = false;
@@ -106,12 +130,13 @@ class VoiceInputController extends StateNotifier<VoiceInputState> {
         isAvailable: false,
         isListening: false,
         error: 'Speech recognition unavailable',
+        timedOut: false,
       );
     }
   }
 
   void reset() {
-    state = state.copyWith(lastWords: '', error: null);
+    state = state.copyWith(lastWords: '', error: null, timedOut: false);
   }
 
   Future<void> toggleListening({
@@ -134,7 +159,12 @@ class VoiceInputController extends StateNotifier<VoiceInputState> {
 
     _clearAutoStopTimer();
 
-    state = state.copyWith(isListening: true, error: null, lastWords: '');
+    state = state.copyWith(
+      isListening: true,
+      error: null,
+      lastWords: '',
+      timedOut: false,
+    );
 
     try {
       await _speech.listen(
@@ -163,6 +193,7 @@ class VoiceInputController extends StateNotifier<VoiceInputState> {
       state = state.copyWith(
         isListening: false,
         error: 'Could not start voice input',
+        timedOut: false,
       );
     }
   }
@@ -176,7 +207,7 @@ class VoiceInputController extends StateNotifier<VoiceInputState> {
       // Ignore speech engine stop errors.
     }
 
-    state = state.copyWith(isListening: false);
+    state = state.copyWith(isListening: false, timedOut: false);
   }
 
   Future<void> cancel() async {
@@ -188,7 +219,7 @@ class VoiceInputController extends StateNotifier<VoiceInputState> {
       // Ignore speech engine cancel errors.
     }
 
-    state = state.copyWith(isListening: false);
+    state = state.copyWith(isListening: false, timedOut: false);
   }
 
   Future<void> openPermissionSettings() async {

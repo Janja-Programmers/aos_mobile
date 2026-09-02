@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:africaonlinestores/core/api/failure.dart';
 import 'package:africaonlinestores/core/utils/either.dart';
 import 'package:africaonlinestores/features/ads/ads_form/controllers/ad_form_actions_controller.dart';
@@ -16,6 +18,7 @@ import 'package:africaonlinestores/features/ads/domain/category.dart';
 import 'package:africaonlinestores/features/ads/domain/pricing_schema.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ad_draft_controller.dart';
 import 'package:africaonlinestores/features/ads/shared/providers/ad_schema_provider.dart';
+import 'package:africaonlinestores/features/ads/shared/utils/ad_failure_message.dart';
 import 'package:africaonlinestores/shared/components/buttons/primary_button.dart';
 import 'package:africaonlinestores/shared/enums/ads.dart';
 import 'package:africaonlinestores/shared/widgets/app_snack.dart';
@@ -44,26 +47,37 @@ class AdFormScreen extends ConsumerStatefulWidget {
 class _AdFormScreenState extends ConsumerState<AdFormScreen> {
   final PageController _pageCtrl = PageController();
   bool _isCancelling = false;
+  bool _initializing = true;
+
+  bool get _requiresPreload => widget.draftId != null || widget.adId != null;
 
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-
-      ref.read(adFormControllerProvider(widget.mode).notifier).reset();
-
-      final draftCtrl = ref.read(adDraftControllerProvider.notifier);
-
-      if (widget.draftId != null) {
-        draftCtrl.loadFromDraft(widget.draftId!);
-      } else if (widget.adId != null) {
-        draftCtrl.loadFromMyAd(widget.adId!);
-      } else {
-        draftCtrl.createNew();
-      }
+      unawaited(_loadInitialDraft());
     });
+  }
+
+  Future<void> _loadInitialDraft() async {
+    if (!mounted) return;
+    setState(() => _initializing = true);
+
+    ref.read(adFormControllerProvider(widget.mode).notifier).reset();
+
+    final draftCtrl = ref.read(adDraftControllerProvider.notifier);
+
+    if (widget.draftId != null) {
+      await draftCtrl.loadFromDraft(widget.draftId!);
+    } else if (widget.adId != null) {
+      await draftCtrl.loadFromMyAd(widget.adId!);
+    } else {
+      draftCtrl.createNew();
+    }
+
+    if (!mounted) return;
+    setState(() => _initializing = false);
   }
 
   @override
@@ -116,9 +130,6 @@ class _AdFormScreenState extends ConsumerState<AdFormScreen> {
     final flowCtrl = ref.read(adFormControllerProvider(widget.mode).notifier);
 
     try {
-      // -------------------------------
-      // NOT DIRTY → JUST EXIT
-      // -------------------------------
       if (!AdDirtyChecker.isDirty(draft)) {
         flowCtrl.reset();
 
@@ -131,9 +142,6 @@ class _AdFormScreenState extends ConsumerState<AdFormScreen> {
         return;
       }
 
-      // -------------------------------
-      // ASK USER
-      // -------------------------------
       final action = await showModalBottomSheet<CancelAction>(
         context: context,
         isScrollControlled: true,
@@ -158,9 +166,6 @@ class _AdFormScreenState extends ConsumerState<AdFormScreen> {
         return;
       }
 
-      // -------------------------------
-      // UI SIDE EFFECTS (IMPORTANT)
-      // -------------------------------
       if (action == CancelAction.discard && mounted) {
         ShowSnack(context, 'Ad Draft discarded').success();
       }
@@ -196,7 +201,7 @@ class _AdFormScreenState extends ConsumerState<AdFormScreen> {
 
       if (!mounted) return;
 
-      if (handleFailure(context, res)) return;
+      if (handleFailure(context, res, adStatus: draft.status)) return;
 
       ctrl.reset();
       ref.read(adDraftControllerProvider.notifier).reset();
@@ -212,32 +217,105 @@ class _AdFormScreenState extends ConsumerState<AdFormScreen> {
       if ((result ?? false) && mounted) {
         context.pop(true);
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) ShowSnack(context, 'Failed to submit!').error();
     } finally {
       ctrl.stopPosting();
     }
   }
 
-  bool handleFailure(BuildContext context, Either<Failure, dynamic> result) {
+  bool handleFailure(
+    BuildContext context,
+    Either<Failure, dynamic> result, {
+    String? adStatus,
+  }) {
     return result.fold((failure) {
-      ShowSnack(context, failure.message).error();
+      ShowSnack(context, adFailureMessage(failure, adStatus: adStatus)).error();
       return true;
     }, (_) => false);
   }
 
+  String _formTitle() {
+    if (widget.mode == AdFormMode.create) {
+      return widget.draftId != null ? 'Edit Draft' : 'Create Ad';
+    }
+    return 'Edit Ad';
+  }
+
+  String _preloadErrorMessage(Object? error) {
+    if (error is Failure && error.message.trim().isNotEmpty) {
+      return adFailureMessage(error);
+    }
+    return 'Could not load ad data.';
+  }
+
+  Widget _buildPreloadScaffold({String? error, required VoidCallback onRetry}) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+        title: Text(_formTitle()),
+        actions: [
+          IconButton(
+            onPressed: () => context.pop(),
+            icon: const Icon(Icons.close),
+          ),
+        ],
+      ),
+      body: error == null
+          ? const Center(child: CircularProgressIndicator())
+          : SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(24),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.error_outline_rounded, size: 48),
+                      const SizedBox(height: 16),
+                      Text(error, textAlign: TextAlign.center),
+                      const SizedBox(height: 16),
+                      OutlinedButton.icon(
+                        onPressed: onRetry,
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_initializing) {
+      return _buildPreloadScaffold(
+        onRetry: () => unawaited(_loadInitialDraft()),
+      );
+    }
+
     final flowState = ref.watch(adFormControllerProvider(widget.mode));
     final flowCtrl = ref.read(adFormControllerProvider(widget.mode).notifier);
+    final draftAsync = ref.watch(adDraftControllerProvider);
 
-    final draft = ref
-        .watch(adDraftControllerProvider)
-        .maybeWhen(
-          data: (v) => v,
-          orElse: () => const AdDraft(source: DraftSource.create),
-        );
+    if (_requiresPreload && draftAsync.isLoading) {
+      return _buildPreloadScaffold(
+        onRetry: () => unawaited(_loadInitialDraft()),
+      );
+    }
 
+    if (_requiresPreload && draftAsync.hasError) {
+      return _buildPreloadScaffold(
+        error: _preloadErrorMessage(draftAsync.error),
+        onRetry: () => unawaited(_loadInitialDraft()),
+      );
+    }
+
+    final draft = draftAsync.value ?? const AdDraft(source: DraftSource.create);
     final categoryId = draft.categoryId;
 
     final schemaAsync = categoryId == null || categoryId.trim().isEmpty
@@ -250,6 +328,25 @@ class _AdFormScreenState extends ConsumerState<AdFormScreen> {
           )
         : ref.watch(adCategorySchemaProvider(categoryId));
 
+    if (_requiresPreload &&
+        categoryId != null &&
+        categoryId.trim().isNotEmpty &&
+        schemaAsync.isLoading) {
+      return _buildPreloadScaffold(
+        onRetry: () => ref.invalidate(adCategorySchemaProvider(categoryId)),
+      );
+    }
+
+    if (_requiresPreload &&
+        categoryId != null &&
+        categoryId.trim().isNotEmpty &&
+        schemaAsync.hasError) {
+      return _buildPreloadScaffold(
+        error: 'Could not load the ad category fields.',
+        onRetry: () => ref.invalidate(adCategorySchemaProvider(categoryId)),
+      );
+    }
+
     const fallbackSchema = AdCategorySchema(
       category: AdCategory(id: '', name: '', isService: false),
       attributes: [],
@@ -257,9 +354,7 @@ class _AdFormScreenState extends ConsumerState<AdFormScreen> {
     );
 
     final schema = schemaAsync.value ?? fallbackSchema;
-
-    final steps = AdFormStepsBuilder.build(schema: schema);
-
+    final steps = AdFormStepsBuilder.build(schema: schema, mode: widget.mode);
     final index = flowState.index.clamp(0, steps.length - 1);
 
     final runner = AdFormStepRunner(
@@ -300,9 +395,7 @@ class _AdFormScreenState extends ConsumerState<AdFormScreen> {
     );
 
     return ScaffoldShell(
-      title: widget.mode == AdFormMode.create
-          ? (widget.draftId != null ? 'Edit Draft' : 'Create Ad')
-          : 'Edit Ad',
+      title: _formTitle(),
       currentIndex: index,
       completed: flowState.completed,
       steps: steps.map((e) => e.label).toList(),

@@ -49,8 +49,8 @@ class ApiEndpoints {
   static const String createAdEndpoint = '/api/method/aos.api.v1.ads.create_ad';
   static const String upsertAdDraftEndpoint =
       '/api/method/aos.api.v1.ads.upsert_ad_draft';
-  static const String getAdDraftEndpoint =
-      '/api/method/aos.api.v1.ads.get_ad_draft';
+  static const String getMyAdDraftEndpoint =
+      '/api/method/aos.api.v1.ads.get_my_ad_draft';
   static const String listAdDraftsEndpoint =
       '/api/method/aos.api.v1.ads.list_my_ad_drafts';
   static const String submitAdDraftEndpoint =

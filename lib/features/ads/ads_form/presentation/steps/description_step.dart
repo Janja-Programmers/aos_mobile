@@ -7,7 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class DescriptionStep extends ConsumerStatefulWidget {
-  const DescriptionStep({super.key});
+  const DescriptionStep({super.key, this.mode = AdFormMode.create});
+
+  final AdFormMode mode;
 
   @override
   ConsumerState<DescriptionStep> createState() => _DescriptionStepState();
@@ -26,20 +28,15 @@ class _DescriptionStepState extends ConsumerState<DescriptionStep> {
   @override
   Widget build(BuildContext context) {
     final draftAsync = ref.watch(adDraftControllerProvider);
-
-    /// Keep latest draft even during loading
     final draft =
         draftAsync.value ?? ref.read(adDraftControllerProvider.notifier).draft;
 
-    /// Initialise description once
     if (!_initialised) {
       _initialised = true;
       _ctrl.text = draft.description;
     }
 
-    /// Flow state
-    final flowState = ref.watch(adFormControllerProvider(AdFormMode.create));
-
+    final flowState = ref.watch(adFormControllerProvider(widget.mode));
     final showErrors = flowState.attempted.contains(flowState.index);
 
     final validation = AdFormValidator.description(draft);
@@ -51,14 +48,11 @@ class _DescriptionStepState extends ConsumerState<DescriptionStep> {
       children: [
         Text('Item Description *', style: context.pStrong),
         const SizedBox(height: 10),
-
         Text(
           'Provide a detailed description of your product so buyers can clearly understand what you are offering.',
           style: context.pMuted,
         ),
-
         const SizedBox(height: 12),
-
         TextField(
           controller: _ctrl,
           maxLines: 10,

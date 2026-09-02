@@ -3,7 +3,7 @@ description: "Africa Online Stores"
 
 publish_to: "none"
 
-version: 1.0.0+14
+version: 1.0.0+15
 
 environment:
   sdk: ^3.10.4
@@ -91,3 +91,4 @@ flutter:
     - assets/icons/app_icon.png
     - assets/icons/google.svg
     - assets/audio/call_ringback.mp3
+    - shorebird.yaml

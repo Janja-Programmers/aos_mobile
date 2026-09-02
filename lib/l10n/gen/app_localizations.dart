@@ -578,59 +578,17 @@ abstract class AppLocalizations {
   /// **'AOS Flash Sales'**
   String get home_flash_sales;
 
-  /// No description provided for @home_services_near_you.
-  ///
-  /// In en, this message translates to:
-  /// **'Services Near You'**
-  String get home_services_near_you;
-
   /// No description provided for @home_new_products.
   ///
   /// In en, this message translates to:
   /// **'New Products in AOS'**
   String get home_new_products;
 
-  /// No description provided for @home_electronic_deals.
-  ///
-  /// In en, this message translates to:
-  /// **'AOS Electronic Deals'**
-  String get home_electronic_deals;
-
   /// No description provided for @home_deals.
   ///
   /// In en, this message translates to:
   /// **'AOS Deals'**
   String get home_deals;
-
-  /// No description provided for @home_furniture.
-  ///
-  /// In en, this message translates to:
-  /// **'Furniture'**
-  String get home_furniture;
-
-  /// No description provided for @home_electronics.
-  ///
-  /// In en, this message translates to:
-  /// **'Electronics'**
-  String get home_electronics;
-
-  /// No description provided for @home_fashion.
-  ///
-  /// In en, this message translates to:
-  /// **'Women\'s Fashion'**
-  String get home_fashion;
-
-  /// No description provided for @home_babies_kids.
-  ///
-  /// In en, this message translates to:
-  /// **'Babies & Kids'**
-  String get home_babies_kids;
-
-  /// No description provided for @home_beauty.
-  ///
-  /// In en, this message translates to:
-  /// **'Beauty'**
-  String get home_beauty;
 
   /// No description provided for @home_photography_tips.
   ///

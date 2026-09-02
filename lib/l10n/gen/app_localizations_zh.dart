@@ -248,31 +248,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get home_flash_sales => 'AOS 闪购';
 
   @override
-  String get home_services_near_you => '附近服务';
-
-  @override
   String get home_new_products => 'AOS 新商品';
 
   @override
-  String get home_electronic_deals => 'AOS 电子优惠';
-
-  @override
   String get home_deals => 'AOS 优惠';
-
-  @override
-  String get home_furniture => '家具';
-
-  @override
-  String get home_electronics => '电子产品';
-
-  @override
-  String get home_fashion => '时尚';
-
-  @override
-  String get home_babies_kids => '婴儿与儿童';
-
-  @override
-  String get home_beauty => '美容';
 
   @override
   String get home_photography_tips => '摄影技巧';

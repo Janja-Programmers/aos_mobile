@@ -260,31 +260,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get home_flash_sales => 'AOS Flash Sales';
 
   @override
-  String get home_services_near_you => 'Services Near You';
-
-  @override
   String get home_new_products => 'New Products in AOS';
 
   @override
-  String get home_electronic_deals => 'AOS Electronic Deals';
-
-  @override
   String get home_deals => 'AOS Deals';
-
-  @override
-  String get home_furniture => 'Furniture';
-
-  @override
-  String get home_electronics => 'Electronics';
-
-  @override
-  String get home_fashion => 'Women\'s Fashion';
-
-  @override
-  String get home_babies_kids => 'Babies & Kids';
-
-  @override
-  String get home_beauty => 'Beauty';
 
   @override
   String get home_photography_tips => 'Photography tips that sell';

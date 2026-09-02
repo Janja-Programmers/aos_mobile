@@ -262,31 +262,10 @@ class AppLocalizationsSw extends AppLocalizations {
   String get home_flash_sales => 'Mauzo ya Haraka AOS';
 
   @override
-  String get home_services_near_you => 'Huduma Karibu Nawe';
-
-  @override
   String get home_new_products => 'Bidhaa Mpya AOS';
 
   @override
-  String get home_electronic_deals => 'Ofa za Elektroniki AOS';
-
-  @override
   String get home_deals => 'Ofa AOS';
-
-  @override
-  String get home_furniture => 'Samani';
-
-  @override
-  String get home_electronics => 'Elektroniki';
-
-  @override
-  String get home_fashion => 'Mitindo';
-
-  @override
-  String get home_babies_kids => 'Watoto';
-
-  @override
-  String get home_beauty => 'Urembo';
 
   @override
   String get home_photography_tips => 'Vidokezo vya upigaji picha';

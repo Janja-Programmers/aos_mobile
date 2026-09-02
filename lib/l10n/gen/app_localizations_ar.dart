@@ -258,31 +258,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get home_flash_sales => 'عروض AOS السريعة';
 
   @override
-  String get home_services_near_you => 'خدمات قريبة منك';
-
-  @override
   String get home_new_products => 'منتجات جديدة في AOS';
 
   @override
-  String get home_electronic_deals => 'عروض الإلكترونيات AOS';
-
-  @override
   String get home_deals => 'عروض AOS';
-
-  @override
-  String get home_furniture => 'أثاث';
-
-  @override
-  String get home_electronics => 'إلكترونيات';
-
-  @override
-  String get home_fashion => 'موضة';
-
-  @override
-  String get home_babies_kids => 'الأطفال والرضع';
-
-  @override
-  String get home_beauty => 'جمال';
 
   @override
   String get home_photography_tips => 'نصائح التصوير';

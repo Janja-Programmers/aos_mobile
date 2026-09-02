@@ -261,31 +261,10 @@ class AppLocalizationsFr extends AppLocalizations {
   String get home_flash_sales => 'Ventes flash AOS';
 
   @override
-  String get home_services_near_you => 'Services près de vous';
-
-  @override
   String get home_new_products => 'Nouveaux produits AOS';
 
   @override
-  String get home_electronic_deals => 'Offres électroniques AOS';
-
-  @override
   String get home_deals => 'Offres AOS';
-
-  @override
-  String get home_furniture => 'Meubles';
-
-  @override
-  String get home_electronics => 'Électronique';
-
-  @override
-  String get home_fashion => 'Mode';
-
-  @override
-  String get home_babies_kids => 'Bébés et enfants';
-
-  @override
-  String get home_beauty => 'Beauté';
 
   @override
   String get home_photography_tips => 'Conseils de photographie';

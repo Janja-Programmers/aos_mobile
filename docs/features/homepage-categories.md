@@ -13,9 +13,8 @@ only identity sent to ad listing/navigation flows.
 - `HomePageController` owns homepage composition and ad requests.
 - Widgets render the composed state only; they do not choose or resolve
   categories.
-- `homeSectionAdsProvider` remains only as a compatibility read-through view of
-  `HomePageController`. It performs no API request and no category lookup.
-- Display-name-to-ID matching in the Home feature is retired.
+- Display-name-to-ID matching and the former Home section compatibility provider
+  are retired and deleted. No second Home section state/network API is kept.
 
 ## Backend contracts
 
@@ -105,6 +104,21 @@ The brand mini-category panel is also populated from the selected backend
 categories. If no categories are available, the promo slider expands to the
 full section width instead of showing an empty category panel.
 
+## Cleanup contract
+
+The completed migration deletes rather than deprecates internal compatibility
+artifacts when they have no remaining consumers. The following files must stay
+absent:
+
+- `lib/features/home/shared/providers/home_section_ads_provider.dart`
+- `lib/features/home/shared/providers/home_page_providers.dart`
+- `lib/features/home/domain/market_place.dart`
+- `lib/features/home/shared/utils/category_lookup.dart`
+
+Localization keys that existed only for the former hardcoded category rails are
+also removed from source ARBs. Generated localization Dart files are refreshed
+with `flutter gen-l10n`; they are not edited manually.
+
 ## Security and trust boundary
 
 The frontend does not infer permissions, category activity, ancestry,
@@ -125,7 +139,8 @@ the authoritative catalog endpoint.
 - `test/features/home/regression/homepage_categories_source_contract_test.dart`
   - fixed taxonomy cannot return to Home configuration/UI;
   - Home controller remains the network owner;
-  - display-name lookup stays retired;
+  - retired compatibility files stay deleted;
+  - obsolete fixed-taxonomy localization keys stay deleted;
   - top category preview stays backend ordered.
 
 ## Device regression checklist
@@ -157,6 +172,6 @@ flutter build apk --debug
 
 ## Delivery impact
 
-**Shorebird OTA candidate.** The implementation changes Dart source, tests and
-documentation only. It does not add packages, native code, permissions, assets,
-SDK changes or storage migrations.
+**Shorebird OTA candidate.** The implementation changes Dart source, source
+localizations, tests and documentation only. It does not add packages, native
+code, permissions, assets, SDK changes or storage migrations.

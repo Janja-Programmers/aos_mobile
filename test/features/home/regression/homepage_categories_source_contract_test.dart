@@ -56,19 +56,50 @@ void main() {
     },
   );
 
-  test('legacy section provider cannot create a competing network owner', () {
-    final provider = File(
+  test('retired Home compatibility files stay deleted', () {
+    const retiredPaths = <String>[
       'lib/features/home/shared/providers/home_section_ads_provider.dart',
-    ).readAsStringSync();
-    final lookup = File(
+      'lib/features/home/shared/providers/home_page_providers.dart',
+      'lib/features/home/domain/market_place.dart',
       'lib/features/home/shared/utils/category_lookup.dart',
-    ).readAsStringSync();
+    ];
 
-    expect(provider, contains('homePageControllerProvider.future'));
-    expect(provider, isNot(contains('adsApiProvider')));
-    expect(provider, isNot(contains('categoriesControllerProvider')));
-    expect(provider, isNot(contains('findParentCategoryIdByNames')));
-    expect(lookup, isNot(contains('findParentCategoryIdByNames')));
+    for (final path in retiredPaths) {
+      expect(File(path).existsSync(), isFalse, reason: '$path must stay retired');
+    }
+  });
+
+  test('retired fixed-taxonomy localization keys stay deleted', () {
+    const retiredKeys = <String>[
+      'home_services_near_you',
+      'home_electronic_deals',
+      'home_furniture',
+      'home_electronics',
+      'home_fashion',
+      'home_babies_kids',
+      'home_beauty',
+    ];
+
+    final arbFiles = Directory('lib/l10n/arb')
+        .listSync()
+        .whereType<File>()
+        .where((file) => file.path.endsWith('.arb'));
+
+    for (final file in arbFiles) {
+      final source = file.readAsStringSync();
+      for (final key in retiredKeys) {
+        expect(
+          source,
+          isNot(contains('"$key"')),
+          reason: '$key must stay retired in ${file.path}',
+        );
+        expect(
+          source,
+          isNot(contains('"@$key"')),
+          reason: '@$key must stay retired in ${file.path}',
+        );
+      }
+    }
   });
 
   test('top category preview remains backend ordered and unshuffled', () {

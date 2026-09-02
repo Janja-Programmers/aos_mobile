@@ -1,6 +1,9 @@
 import 'package:africaonlinestores/core/routing/helpers/navigation.dart';
 import 'package:africaonlinestores/core/theme/app_text_styles.dart';
 import 'package:africaonlinestores/core/theme/app_theme_extensions.dart';
+import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
+import 'package:africaonlinestores/features/home/domain/home_ads_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/brand/home_brand_models.dart';
 import 'package:africaonlinestores/features/home/presentation/components/brand/home_brand_section.dart';
 import 'package:africaonlinestores/features/home/presentation/components/home_categories_preview_section.dart';
@@ -33,23 +36,22 @@ class AdListContentView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pageAsync = ref.watch(homePageControllerProvider);
-
     final shortsAsync = ref.watch(shortsHomeControllerProvider);
-
     final colors = context.appColors;
     final l10n = context.l10n;
 
     return pageAsync.when(
+      skipLoadingOnReload: true,
       loading: () => const Center(child: CircularProgressIndicator()),
-
       error: (_, _) => const SizedBox.shrink(),
-
       data: (state) {
+        final List<HomeAdsSection> categorySections = state.sections
+            .where((HomeAdsSection section) => section.isCategorySection)
+            .toList(growable: false);
+
         return shortsAsync.when(
           loading: () => const SizedBox(height: 220),
-
           error: (_, _) => const SizedBox.shrink(),
-
           data: (shorts) {
             return NotificationListener<ScrollNotification>(
               onNotification: (n) {
@@ -58,20 +60,16 @@ class AdListContentView extends ConsumerWidget {
                 }
                 return false;
               },
-
               child: RefreshIndicator(
                 onRefresh: () async {
                   await onRefresh();
-
                   await ref
                       .read(shortsHomeControllerProvider.notifier)
                       .refresh();
                 },
-
                 child: CustomScrollView(
                   slivers: [
                     const HomeHeroCarouselSection(),
-
                     const HomeCategoriesPreviewSection(),
 
                     /// SHORTS SECTION
@@ -81,9 +79,7 @@ class AdListContentView extends ConsumerWidget {
                         child: Row(
                           children: [
                             Text('Live & Shorts', style: context.h5),
-
                             const Spacer(),
-
                             TextButton(
                               onPressed: () {
                                 FeedsNavigation.toFeeds(context);
@@ -94,35 +90,21 @@ class AdListContentView extends ConsumerWidget {
                         ),
                       ),
                     ),
-
-                    /// SHORTS SECTION
                     SliverToBoxAdapter(
                       child: ShortsHorizontalList(shorts: shorts),
                     ),
 
-                    /// FLASH SALES
+                    /// FIXED MERCHANDISING + BACKEND CATEGORY RAILS
                     _sectionSliver(context, state, 'flash_sales'),
-
-                    /// SERVICES
-                    _sectionSliver(context, state, 'services'),
-
-                    /// NEW PRODUCTS
+                    if (categorySections.isNotEmpty)
+                      _sectionSliver(context, state, categorySections[0].key),
                     _sectionSliver(context, state, 'new_products'),
-
-                    /// ELECTRONIC DEALS
-                    _sectionSliver(context, state, 'electronic_deal'),
-
-                    /// DEALS
+                    if (categorySections.length > 1)
+                      _sectionSliver(context, state, categorySections[1].key),
                     _sectionSliver(context, state, 'deal'),
-
-                    /// RANKING TIPS
                     const HomeRankingTipsSection(),
-
-                    /// FURNITURE
-                    _sectionSliver(context, state, 'furniture'),
-
-                    /// ELECTRONICS
-                    _sectionSliver(context, state, 'electronics'),
+                    if (categorySections.length > 2)
+                      _sectionSliver(context, state, categorySections[2].key),
 
                     /// BRAND SECTION
                     SliverToBoxAdapter(
@@ -155,47 +137,26 @@ class AdListContentView extends ConsumerWidget {
                               icon: Icons.apartment,
                             ),
                           ],
-                          categories: [
-                            HomeCategoryItem(
-                              title: l10n.home_electronics,
-                              icon: Icons.desktop_windows_outlined,
-                              onTap: () => openAllAds(
-                                context,
-                                categoryId: 'Electronics',
-                              ),
-                            ),
-                            HomeCategoryItem(
-                              title: l10n.home_fashion,
-                              icon: Icons.checkroom_outlined,
-                              onTap: () => openAllAds(
-                                context,
-                                categoryId: "Women's Fashion",
-                              ),
-                            ),
-                            HomeCategoryItem(
-                              title: 'Garden Supplies',
-                              icon: Icons.home_outlined,
-                              onTap: () => openAllAds(
-                                context,
-                                categoryId: 'Garden Supplies',
-                              ),
-                            ),
-                          ],
+                          categories: state.selectedCategories
+                              .map(
+                                (CategoryNode category) => HomeCategoryItem(
+                                  title: category.name,
+                                  icon: Icons.category_outlined,
+                                  onTap: () => openAllAds(
+                                    context,
+                                    categoryId: category.id,
+                                  ),
+                                ),
+                              )
+                              .toList(growable: false),
                         ),
                       ),
                     ),
-
-                    /// FASHION
-                    _sectionSliver(context, state, 'fashion'),
-
-                    /// BABIES & KIDS
-                    _sectionSliver(context, state, 'kids'),
+                    if (categorySections.length > 3)
+                      _sectionSliver(context, state, categorySections[3].key),
 
                     /// HERO AGAIN
                     const HomeHeroCarouselSection(),
-
-                    /// BEAUTY
-                    _sectionSliver(context, state, 'beauty'),
 
                     /// DISCOVER
                     SliverPadding(
@@ -234,50 +195,46 @@ class AdListContentView extends ConsumerWidget {
   }
 
   Widget _sectionSliver(BuildContext context, HomePageState state, String key) {
-    final items = state.sectionItems[key] ?? [];
-
+    final List<AOSAdListItem> items =
+        state.sectionItems[key] ?? const <AOSAdListItem>[];
     if (items.isEmpty) {
       return const SliverToBoxAdapter(child: SizedBox.shrink());
     }
 
-    final section = state.sections.firstWhere(
-      (s) => s.key == key,
-      orElse: () => state.sections.first,
+    final HomeAdsSection section = state.sections.firstWhere(
+      (HomeAdsSection item) => item.key == key,
     );
 
     void seeAll() {
-      final category = (section.preferredCategoryNames.isNotEmpty)
-          ? section.preferredCategoryNames.first
-          : null;
-
-      final promotion = section.promotionType;
-
-      // 🔥 PRIORITY ORDER MATTERS
-
       if (key == 'new_products') {
         openAllAds(context, sort: AdsSort.recent);
         return;
       }
 
-      if (promotion == 'flash_sale') {
+      if (section.promotionType == 'flash_sale') {
         openAllAds(context, dealType: DealType.flashSale);
         return;
       }
 
-      if (promotion == 'deal') {
-        openAllAds(context, categoryId: category, dealType: DealType.deals);
+      if (section.promotionType == 'deal') {
+        openAllAds(
+          context,
+          categoryId: section.categoryId,
+          dealType: DealType.deals,
+        );
         return;
       }
 
-      if (category != null) {
-        openAllAds(context, categoryId: category);
-      } else {
-        openAllAds(context);
+      final String? categoryId = section.categoryId;
+      if (categoryId != null && categoryId.isNotEmpty) {
+        openAllAds(context, categoryId: categoryId);
+        return;
       }
+
+      openAllAds(context);
     }
 
-    final title = homeSectionTitle(context, key);
-
+    final String title = section.title ?? homeSectionTitle(context, key);
     if (key == 'new_products') {
       return GridAdsSection(title: title, items: items, onSeeAll: seeAll);
     }

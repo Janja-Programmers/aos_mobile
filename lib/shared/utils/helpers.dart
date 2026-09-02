@@ -53,24 +53,10 @@ String homeSectionTitle(BuildContext context, String key) {
   switch (key) {
     case 'flash_sales':
       return l10n.home_flash_sales;
-    case 'services':
-      return l10n.home_services_near_you;
     case 'new_products':
       return l10n.home_new_products;
-    case 'electronic_deal':
-      return l10n.home_electronic_deals;
     case 'deal':
       return l10n.home_deals;
-    case 'furniture':
-      return l10n.home_furniture;
-    case 'electronics':
-      return l10n.home_electronics;
-    case 'fashion':
-      return l10n.home_fashion;
-    case 'kids':
-      return l10n.home_babies_kids;
-    case 'beauty':
-      return l10n.home_beauty;
     default:
       return '';
   }

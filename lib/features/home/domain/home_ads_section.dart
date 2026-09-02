@@ -4,17 +4,19 @@ import 'package:flutter/foundation.dart';
 class HomeAdsSection {
   const HomeAdsSection({
     required this.key,
-    this.preferredCategoryNames = const <String>[],
+    this.title,
+    this.categoryId,
     this.sort,
     this.promotionType,
     this.limit = 8,
-    this.seeAllCategoryId,
   });
 
   final String key;
-  final List<String> preferredCategoryNames;
+  final String? title;
+  final String? categoryId;
   final String? sort;
   final String? promotionType;
   final int limit;
-  final String? seeAllCategoryId;
+
+  bool get isCategorySection => categoryId?.trim().isNotEmpty ?? false;
 }

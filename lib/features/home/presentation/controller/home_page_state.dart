@@ -1,11 +1,15 @@
 import 'package:africaonlinestores/features/ads/domain/aos_ad.dart';
+import 'package:africaonlinestores/features/catalog/domain/category_node.dart';
 import 'package:africaonlinestores/features/home/domain/home_ads_section.dart';
 import 'package:africaonlinestores/features/shorts/shared/domain/entities/short.dart';
+
+const Object _unsetHomeLocation = Object();
 
 class HomePageState {
   const HomePageState({
     this.locationId,
     required this.sections,
+    required this.selectedCategories,
     required this.sectionItems,
     required this.discoverItems,
     required this.shortsForYou,
@@ -16,6 +20,7 @@ class HomePageState {
 
   final String? locationId;
   final List<HomeAdsSection> sections;
+  final List<CategoryNode> selectedCategories;
   final Map<String, List<AOSAdListItem>> sectionItems;
   final List<AOSAdListItem> discoverItems;
   final List<Short> shortsForYou;
@@ -25,8 +30,9 @@ class HomePageState {
   final bool hasMore;
 
   HomePageState copyWith({
-    String? locationId,
+    Object? locationId = _unsetHomeLocation,
     List<HomeAdsSection>? sections,
+    List<CategoryNode>? selectedCategories,
     Map<String, List<AOSAdListItem>>? sectionItems,
     List<AOSAdListItem>? discoverItems,
     List<Short>? shortsForYou,
@@ -35,8 +41,11 @@ class HomePageState {
     bool? hasMore,
   }) {
     return HomePageState(
-      locationId: locationId ?? this.locationId,
+      locationId: identical(locationId, _unsetHomeLocation)
+          ? this.locationId
+          : locationId as String?,
       sections: sections ?? this.sections,
+      selectedCategories: selectedCategories ?? this.selectedCategories,
       sectionItems: sectionItems ?? this.sectionItems,
       discoverItems: discoverItems ?? this.discoverItems,
       shortsForYou: shortsForYou ?? this.shortsForYou,
@@ -49,13 +58,15 @@ class HomePageState {
   factory HomePageState.initial(
     List<HomeAdsSection> sections, {
     String? locationId,
+    List<CategoryNode> selectedCategories = const <CategoryNode>[],
   }) {
     return HomePageState(
       locationId: locationId,
       sections: sections,
-      sectionItems: const {},
-      discoverItems: const [],
-      shortsForYou: const [],
+      selectedCategories: selectedCategories,
+      sectionItems: const <String, List<AOSAdListItem>>{},
+      discoverItems: const <AOSAdListItem>[],
+      shortsForYou: const <Short>[],
       initialLoading: true,
       loadingMore: false,
       hasMore: true,

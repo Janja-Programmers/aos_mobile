@@ -24,6 +24,7 @@ The first recommended feature is **authentication and session** because it estab
 - [Connect Chat](connect-chat.md)
 - [Calls](calls/README.md)
 - [Catalog](catalog/README.md)
+- [Homepage categories](homepage-categories.md)
 - [Live](live/README.md)
 - [Activity Center](activity/README.md)
 - [Notifications](notifications/README.md)

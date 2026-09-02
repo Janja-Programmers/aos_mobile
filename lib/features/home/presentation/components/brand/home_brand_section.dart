@@ -15,6 +15,10 @@ class HomeBrandSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (categories.isEmpty) {
+      return SizedBox(height: 210, child: VerticalPromoSlider(items: promos));
+    }
+
     return Row(
       children: [
         Expanded(

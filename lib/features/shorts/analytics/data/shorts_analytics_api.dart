@@ -13,6 +13,32 @@ class ShortsAnalyticsApi {
 
   ShortsAnalyticsApi(this._client);
 
+  Future<Either<Failure, ShortAnalyticsResult>> shortAnalytics({
+    required String shortId,
+    String? dateFrom,
+    String? dateTo,
+  }) async {
+    try {
+      final res = await _client.get(
+        ApiEndpoints.getShortAnalytics,
+        queryParameters: <String, dynamic>{
+          'short_id': shortId,
+          if (dateFrom != null && dateFrom.isNotEmpty) 'date_from': dateFrom,
+          if (dateTo != null && dateTo.isNotEmpty) 'date_to': dateTo,
+        },
+      );
+      final unwrapped = unwrapFrappe(res);
+      return unwrapped.fold(
+        Either.left,
+        (json) => Either.right(ShortAnalyticsResult.fromJson(_payload(json))),
+      );
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(const Failure('Failed to load Short analytics.'));
+    }
+  }
+
   Future<Either<Failure, ShortsAnalyticsResult>> myAnalytics({
     String? dateFrom,
     String? dateTo,
@@ -29,10 +55,8 @@ class ShortsAnalyticsApi {
       );
 
       final unwrapped = unwrapFrappe(res);
-
       return unwrapped.fold(Either.left, (json) {
-        final data = _payload(json);
-        return Either.right(ShortsAnalyticsResult.fromJson(data));
+        return Either.right(ShortsAnalyticsResult.fromJson(_payload(json)));
       });
     } on DioException catch (e) {
       return Either.left(mapDioException(e));

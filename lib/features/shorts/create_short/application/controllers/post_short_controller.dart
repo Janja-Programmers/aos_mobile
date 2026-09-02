@@ -153,11 +153,14 @@ class PostShortController extends StateNotifier<UploadState> {
       return;
     }
 
+    final retryProgress = state.status == UploadStatus.failed
+        ? state.progress.clamp(0.0, 1.0).toDouble()
+        : 0.0;
     _submitting = true;
     _uploadCancelToken = CancelToken();
     state = state.copyWith(
       status: UploadStatus.initializing,
-      progress: 0,
+      progress: retryProgress,
       clearError: true,
     );
 
@@ -212,6 +215,11 @@ class PostShortController extends StateNotifier<UploadState> {
         return;
       }
       final mediaId = uploaded.fold<String?>((failure) {
+        appLogger.w(
+          'Short upload failed during ${state.status.name}: '
+          'type=${failure.type}, status=${failure.statusCode}, '
+          'error=${failure.error ?? 'none'}.',
+        );
         _fail(failure.message);
         return null;
       }, (result) => result.mediaId);
@@ -229,6 +237,11 @@ class PostShortController extends StateNotifier<UploadState> {
       );
       if (_disposed) return;
       final shortId = created.fold<String?>((failure) {
+        appLogger.w(
+          'Short creation failed after media upload: '
+          'type=${failure.type}, status=${failure.statusCode}, '
+          'error=${failure.error ?? 'none'}.',
+        );
         _fail(failure.message);
         return null;
       }, (value) => value);
@@ -265,11 +278,21 @@ class PostShortController extends StateNotifier<UploadState> {
         if (CancelToken.isCancel(error)) {
           _markCancelled();
         } else {
-          _fail('Upload failed. Please retry.');
+          appLogger.w(
+            'Short upload threw during ${state.status.name}: '
+            'type=${error.type}, status=${error.response?.statusCode}.',
+          );
+          _fail('Upload interrupted. Retry will reuse confirmed upload work.');
         }
       }
-    } catch (_) {
-      if (!_disposed) _fail('Upload failed. Please retry.');
+    } catch (error) {
+      if (!_disposed) {
+        appLogger.w(
+          'Short upload failed during ${state.status.name}: '
+          '${error.runtimeType}.',
+        );
+        _fail('Upload failed. Please retry.');
+      }
     } finally {
       _submitting = false;
       _uploadCancelToken = null;

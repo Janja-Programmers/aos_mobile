@@ -12,9 +12,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// ─────────────────────────────────────────
-/// ARGUMENT MODEL
-/// ─────────────────────────────────────────
 class PostShortDetailsArgs {
   final String sessionId;
   final List<SelectedMedia> media;
@@ -26,10 +23,6 @@ class PostShortDetailsArgs {
     required this.selectedSound,
   });
 }
-
-/// ─────────────────────────────────────────
-/// ROUTES
-/// ─────────────────────────────────────────
 
 class ShortDetailArgs {
   final List<Short> initialShorts;
@@ -103,14 +96,15 @@ class ShortsRoutes {
           );
         },
       ),
-
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
         name: AppRoutes.nPostShort,
         path: AppRoutes.postShort,
-        builder: (context, state) => const PostShortMediaPickerScreen(),
+        builder: (context, state) {
+          final initialSound = state.extra as ShortSound?;
+          return PostShortMediaPickerScreen(initialSound: initialSound);
+        },
       ),
-
       GoRoute(
         parentNavigatorKey: rootNavigatorKey,
         name: AppRoutes.nPostShortDetails,
@@ -172,9 +166,6 @@ class _ShortDetailByIdScreen extends ConsumerWidget {
   }
 }
 
-/// ─────────────────────────────────────────
-/// NAVIGATION HELPERS
-/// ─────────────────────────────────────────
 class ShortsNavigation {
   const ShortsNavigation._();
 
@@ -210,8 +201,11 @@ class ShortsNavigation {
     );
   }
 
-  static Future<void> toPostShort(BuildContext context) async {
-    await context.pushNamed<void>(AppRoutes.nPostShort);
+  static Future<void> toPostShort(
+    BuildContext context, {
+    ShortSound? initialSound,
+  }) async {
+    await context.pushNamed<void>(AppRoutes.nPostShort, extra: initialSound);
   }
 
   static void toPostShortDetails(

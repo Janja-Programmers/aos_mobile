@@ -60,6 +60,40 @@ class ShortsShareApi {
     }
   }
 
+  Future<Either<Failure, int?>> shareToChat({
+    required String shortId,
+    required String conversationId,
+    String? message,
+    String? eventId,
+  }) async {
+    try {
+      final normalizedMessage = message?.trim() ?? '';
+      final normalizedEventId = eventId?.trim() ?? '';
+      final res = await _client.post(
+        ApiEndpoints.shareShortToChat,
+        data: <String, dynamic>{
+          'short_id': shortId,
+          'conversation_id': conversationId,
+          if (normalizedMessage.isNotEmpty) 'message': normalizedMessage,
+          if (normalizedEventId.isNotEmpty) 'event_id': normalizedEventId,
+        },
+      );
+
+      final unwrapped = unwrapFrappe(res);
+      return unwrapped.fold(Either.left, (json) {
+        final data = _payload(json);
+        final metrics = asJsonMap(data['metrics']);
+        return Either.right(_toNullableInt(metrics['share_count']));
+      });
+    } on DioException catch (e) {
+      return Either.left(mapDioException(e));
+    } catch (_) {
+      return Either.left(
+        const Failure('Unexpected error sharing Short to chat'),
+      );
+    }
+  }
+
   static Map<String, dynamic> _payload(Map<String, dynamic> json) {
     final data = asJsonMap(json['data']);
     if (data.isNotEmpty) return data;

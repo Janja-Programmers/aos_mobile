@@ -83,7 +83,9 @@ class _PostShortDetailsScreenState
       setState(() => _showMentions = shouldShow);
     }
     if (query != null) {
-      ref.read(shortMentionsControllerProvider.notifier).search(query);
+      ref
+          .read(shortMentionsControllerProvider(widget.sessionId).notifier)
+          .search(query);
     }
     _mentionAccountIds.removeWhere(
       (token, _) => !captionContainsMention(value.text, token),
@@ -93,6 +95,9 @@ class _PostShortDetailsScreenState
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(postShortControllerProvider(widget.sessionId));
+    final mentionState = ref.watch(
+      shortMentionsControllerProvider(widget.sessionId),
+    );
     final isSeller =
         ref.watch(authControllerProvider).asAuthenticated?.seller.isSeller ??
         false;
@@ -116,30 +121,55 @@ class _PostShortDetailsScreenState
         child: LayoutBuilder(
           builder: (context, constraints) {
             final wide = constraints.maxWidth >= 700;
-            final content = _publishContent(state, isSeller: isSeller);
-            final preview = _mediaPreview(state);
+            final settings = _publishSettings(state, isSeller: isSeller);
+            final composer = _captionComposer(
+              state,
+              mentionState: mentionState,
+            );
+
             return Column(
               children: <Widget>[
                 Expanded(
                   child: SingleChildScrollView(
                     keyboardDismissBehavior:
                         ScrollViewKeyboardDismissBehavior.onDrag,
-                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
                     child: wide
                         ? Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: <Widget>[
-                              Expanded(flex: 4, child: preview),
+                              Expanded(flex: 4, child: _mediaPreview(state)),
                               const SizedBox(width: 24),
-                              Expanded(flex: 6, child: content),
+                              Expanded(
+                                flex: 6,
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: <Widget>[
+                                    composer,
+                                    const SizedBox(height: 18),
+                                    settings,
+                                  ],
+                                ),
+                              ),
                             ],
                           )
                         : Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: <Widget>[
-                              preview,
-                              const SizedBox(height: 20),
-                              content,
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Expanded(
+                                    flex: 10,
+                                    child: _mediaPreview(state),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(flex: 11, child: composer),
+                                ],
+                              ),
+                              const SizedBox(height: 18),
+                              settings,
                             ],
                           ),
                   ),
@@ -153,41 +183,32 @@ class _PostShortDetailsScreenState
     );
   }
 
-  Widget _publishContent(UploadState state, {required bool isSeller}) {
+  Widget _captionComposer(
+    UploadState state, {
+    required ShortMentionsState mentionState,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         _captionField(),
-        if (_showMentions) _mentionSuggestions(),
-        const SizedBox(height: 12),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: <Widget>[
-            ActionChip(
-              avatar: const Icon(Icons.tag_rounded, size: 18),
-              label: Text(
-                state.hashtags.isEmpty
-                    ? 'Hashtags'
-                    : 'Hashtags (${state.hashtags.length})',
-              ),
-              onPressed: state.isBusy ? null : _showHashtagSheet,
-            ),
-            ActionChip(
-              avatar: const Icon(Icons.alternate_email_rounded, size: 18),
-              label: const Text('Mention'),
-              onPressed: state.isBusy ? null : _showMentionSheet,
-            ),
-          ],
+        if (_showMentions) _mentionSuggestions(mentionState),
+        const SizedBox(height: 8),
+        _ComposerAction(
+          icon: Icons.tag_rounded,
+          label: state.hashtags.isEmpty
+              ? 'Hashtags'
+              : 'Hashtags (${state.hashtags.length})',
+          onPressed: state.isBusy ? null : _showHashtagSheet,
         ),
         if (state.hashtags.isNotEmpty) ...<Widget>[
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: 6,
+            runSpacing: 6,
             children: state.hashtags
                 .map(
                   (tag) => InputChip(
+                    visualDensity: VisualDensity.compact,
                     label: Text('#$tag'),
                     onDeleted: state.isBusy
                         ? null
@@ -201,11 +222,16 @@ class _PostShortDetailsScreenState
                 .toList(growable: false),
           ),
         ],
-        if (!state.selectedSound.isOriginal) ...<Widget>[
-          const SizedBox(height: 16),
-          _selectedSoundRow(state),
-        ],
-        const SizedBox(height: 18),
+      ],
+    );
+  }
+
+  Widget _publishSettings(UploadState state, {required bool isSeller}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        if (!state.selectedSound.isOriginal) _selectedSoundRow(state),
+        if (!state.selectedSound.isOriginal) const SizedBox(height: 14),
         DecoratedBox(
           decoration: BoxDecoration(
             border: Border.all(color: context.appColors.border),
@@ -232,7 +258,7 @@ class _PostShortDetailsScreenState
           ),
         ),
         if (isSeller) ...<Widget>[
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           Text('Tag a product', style: context.pStrong),
           const SizedBox(height: 4),
           Text(
@@ -262,8 +288,8 @@ class _PostShortDetailsScreenState
     return TextField(
       controller: _captionController,
       focusNode: _captionFocus,
-      minLines: 5,
-      maxLines: 8,
+      minLines: 4,
+      maxLines: 7,
       maxLength: 1000,
       textCapitalization: TextCapitalization.sentences,
       decoration: const InputDecoration(
@@ -275,21 +301,22 @@ class _PostShortDetailsScreenState
   }
 
   Widget _mediaPreview(UploadState state) {
-    final availableWidth = MediaQuery.sizeOf(context).width - 40;
-    final previewWidth = availableWidth.clamp(180, 360).toDouble();
-    final previewHeight = (previewWidth * 16 / 9).clamp(280, 540).toDouble();
-    final AppImageDecodeSize decodeSize = AppImageDecode.forBox(
-      context,
-      logicalWidth: previewWidth,
-      logicalHeight: previewHeight,
-    );
-    return Align(
-      alignment: AlignmentDirectional.topCenter,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final previewWidth = constraints.maxWidth > 280
+            ? 280.0
+            : constraints.maxWidth;
+        final previewHeight = (previewWidth * 16 / 9).clamp(220.0, 480.0);
+        final decodeSize = AppImageDecode.forBox(
+          context,
+          logicalWidth: previewWidth,
+          logicalHeight: previewHeight,
+        );
+
+        return Align(
+          alignment: AlignmentDirectional.topCenter,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(18),
             child: SizedBox(
               width: previewWidth,
               height: previewHeight,
@@ -308,14 +335,15 @@ class _PostShortDetailsScreenState
                           ),
                           if (!state.selectedSound.isOriginal)
                             PositionedDirectional(
-                              top: 12,
-                              start: 12,
-                              end: 12,
-                              child: Center(
+                              top: 8,
+                              start: 8,
+                              end: 8,
+                              child: Align(
+                                alignment: AlignmentDirectional.topCenter,
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 8,
+                                    horizontal: 9,
+                                    vertical: 6,
                                   ),
                                   decoration: BoxDecoration(
                                     color: Colors.black54,
@@ -326,10 +354,10 @@ class _PostShortDetailsScreenState
                                     children: <Widget>[
                                       const Icon(
                                         Icons.music_note_rounded,
-                                        size: 18,
+                                        size: 15,
                                         color: Colors.white,
                                       ),
-                                      const SizedBox(width: 6),
+                                      const SizedBox(width: 4),
                                       Flexible(
                                         child: Text(
                                           state.selectedSound.title,
@@ -337,6 +365,7 @@ class _PostShortDetailsScreenState
                                           overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(
                                             color: Colors.white,
+                                            fontSize: 11,
                                             fontWeight: FontWeight.w700,
                                           ),
                                         ),
@@ -350,7 +379,38 @@ class _PostShortDetailsScreenState
                             child: Icon(
                               Icons.play_circle_outline_rounded,
                               color: Colors.white70,
-                              size: 58,
+                              size: 46,
+                            ),
+                          ),
+                          PositionedDirectional(
+                            start: 8,
+                            end: 8,
+                            bottom: 8,
+                            child: Wrap(
+                              spacing: 4,
+                              runSpacing: 4,
+                              children: <Widget>[
+                                _PreviewInfoPill(
+                                  icon: Icons.schedule_rounded,
+                                  label: _clipDurationLabel(),
+                                  semanticLabel: 'Duration',
+                                ),
+                                _PreviewInfoPill(
+                                  icon: Icons.public_rounded,
+                                  label: audienceShortLabel(state.audience),
+                                  semanticLabel: 'Visibility',
+                                ),
+                                _PreviewInfoPill(
+                                  icon: Icons.chat_bubble_outline_rounded,
+                                  label: state.allowComments ? 'On' : 'Off',
+                                  semanticLabel: 'Comments',
+                                ),
+                                _PreviewInfoPill(
+                                  icon: Icons.download_outlined,
+                                  label: state.allowDownloads ? 'On' : 'Off',
+                                  semanticLabel: 'Downloads',
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -358,45 +418,26 @@ class _PostShortDetailsScreenState
               ),
             ),
           ),
-          const SizedBox(height: 10),
-          Wrap(
-            alignment: WrapAlignment.center,
-            spacing: 8,
-            runSpacing: 8,
-            children: <Widget>[
-              _InfoBadge(label: 'Duration', value: _clipDurationLabel()),
-              _InfoBadge(
-                label: 'Visibility',
-                value: audienceShortLabel(state.audience),
-              ),
-              _InfoBadge(
-                label: 'Comments',
-                value: state.allowComments ? 'Allowed' : 'Off',
-              ),
-              _InfoBadge(
-                label: 'Downloads',
-                value: state.allowDownloads ? 'Allowed' : 'Off',
-              ),
-            ],
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
-  Widget _mentionSuggestions() {
-    final state = ref.watch(shortMentionsControllerProvider);
+  Widget _mentionSuggestions(ShortMentionsState state) {
     return AnimatedSize(
       duration: const Duration(milliseconds: 180),
       child: Container(
         constraints: const BoxConstraints(maxHeight: 240),
         margin: const EdgeInsets.only(top: 6),
-        decoration: BoxDecoration(
+        child: Material(
           color: Theme.of(context).colorScheme.surfaceContainer,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Theme.of(context).dividerColor),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: BorderSide(color: Theme.of(context).dividerColor),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: _mentionSuggestionBody(state),
         ),
-        child: _mentionSuggestionBody(state),
       ),
     );
   }
@@ -416,7 +457,9 @@ class _PostShortDetailsScreenState
             Expanded(child: Text(state.errorMessage!)),
             TextButton(
               onPressed: ref
-                  .read(shortMentionsControllerProvider.notifier)
+                  .read(
+                    shortMentionsControllerProvider(widget.sessionId).notifier,
+                  )
                   .retry,
               child: const Text('Retry'),
             ),
@@ -434,7 +477,11 @@ class _PostShortDetailsScreenState
       onNotification: (notification) {
         if (notification.metrics.extentAfter < 100) {
           unawaited(
-            ref.read(shortMentionsControllerProvider.notifier).loadMore(),
+            ref
+                .read(
+                  shortMentionsControllerProvider(widget.sessionId).notifier,
+                )
+                .loadMore(),
           );
         }
         return false;
@@ -625,242 +672,14 @@ class _PostShortDetailsScreenState
   }
 
   Future<void> _showHashtagSheet() async {
-    final initial = ref
-        .read(postShortControllerProvider(widget.sessionId))
-        .hashtags
-        .toList(growable: true);
-    final text = TextEditingController();
-    var tags = initial;
+    final state = ref.read(postShortControllerProvider(widget.sessionId));
     await showModalBottomSheet<void>(
       context: context,
       useSafeArea: true,
       isScrollControlled: true,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setSheetState) {
-          void addTag() {
-            final clean = normalizeShortHashtag(text.text);
-            if (clean == null || tags.contains(clean) || tags.length >= 10) {
-              return;
-            }
-            setSheetState(() {
-              tags = <String>[...tags, clean];
-              text.clear();
-            });
-            _controller.setHashtags(tags);
-          }
-
-          return Padding(
-            padding: EdgeInsets.fromLTRB(
-              20,
-              16,
-              20,
-              MediaQuery.viewInsetsOf(context).bottom + 24,
-            ),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text('Hashtags', style: context.h5),
-                            Text(
-                              'Add up to 10 hashtags.',
-                              style: context.pMuted,
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: TextField(
-                          controller: text,
-                          autofocus: true,
-                          textInputAction: TextInputAction.done,
-                          onSubmitted: (_) => addTag(),
-                          decoration: const InputDecoration(
-                            prefixText: '# ',
-                            hintText: 'Hashtag',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      FilledButton(
-                        onPressed: tags.length >= 10 ? null : addTag,
-                        child: Text(
-                          'Add',
-                          style: AppTextStylesX(context).button,
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (tags.isNotEmpty) ...<Widget>[
-                    const SizedBox(height: 14),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: tags
-                          .map((tag) {
-                            return InputChip(
-                              label: Text('#$tag'),
-                              onDeleted: () {
-                                setSheetState(
-                                  () => tags = tags
-                                      .where((item) => item != tag)
-                                      .toList(growable: true),
-                                );
-                                _controller.setHashtags(tags);
-                              },
-                            );
-                          })
-                          .toList(growable: false),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-    text.dispose();
-  }
-
-  Future<void> _showMentionSheet() async {
-    final search = TextEditingController();
-    ref.read(shortMentionsControllerProvider.notifier).search('');
-    await showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      isScrollControlled: true,
-      builder: (sheetContext) => Consumer(
-        builder: (context, ref, _) {
-          final state = ref.watch(shortMentionsControllerProvider);
-          return Padding(
-            padding: EdgeInsets.fromLTRB(
-              20,
-              16,
-              20,
-              MediaQuery.viewInsetsOf(context).bottom + 20,
-            ),
-            child: SizedBox(
-              height: MediaQuery.sizeOf(context).height * .62,
-              child: Column(
-                children: <Widget>[
-                  Row(
-                    children: <Widget>[
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: <Widget>[
-                            Text('Mention someone', style: context.h5),
-                            Text(
-                              'Find someone to mention.',
-                              style: context.pMuted,
-                            ),
-                          ],
-                        ),
-                      ),
-                      IconButton(
-                        onPressed: () => Navigator.pop(sheetContext),
-                        icon: const Icon(Icons.close),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: search,
-                    autofocus: true,
-                    decoration: const InputDecoration(
-                      prefixIcon: Icon(Icons.alternate_email_rounded),
-                      hintText: 'Search people',
-                      border: OutlineInputBorder(),
-                    ),
-                    onChanged: (value) {
-                      final clean = value.trim();
-                      if (clean.length >= 2) {
-                        ref
-                            .read(shortMentionsControllerProvider.notifier)
-                            .search(clean);
-                      }
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  Expanded(
-                    child: search.text.trim().length < 2
-                        ? const Center(
-                            child: Text('Type at least two characters.'),
-                          )
-                        : _mentionModalResults(state, sheetContext),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-    search.dispose();
-  }
-
-  Widget _mentionModalResults(
-    ShortMentionsState state,
-    BuildContext sheetContext,
-  ) {
-    if (state.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-    if (state.errorMessage != null && state.items.isEmpty) {
-      return Center(child: Text(state.errorMessage!));
-    }
-    if (state.items.isEmpty) {
-      return const Center(child: Text('No people found.'));
-    }
-    return NotificationListener<ScrollEndNotification>(
-      onNotification: (notification) {
-        if (notification.metrics.extentAfter < 100) {
-          unawaited(
-            ref.read(shortMentionsControllerProvider.notifier).loadMore(),
-          );
-        }
-        return false;
-      },
-      child: ListView.builder(
-        itemCount: state.items.length + (state.isLoadingMore ? 1 : 0),
-        itemBuilder: (context, index) {
-          if (index == state.items.length) {
-            return const Padding(
-              padding: EdgeInsets.all(12),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          }
-          final friend = state.items[index];
-          return ListTile(
-            leading: CircleAvatar(child: Text(friend.initials)),
-            title: Text(friend.displayName),
-            subtitle: Text('@${mentionTokenForFriend(friend)}'),
-            trailing: friend.isVerified
-                ? const Icon(Icons.verified, size: 18)
-                : null,
-            onTap: () {
-              Navigator.pop(sheetContext);
-              _insertMention(friend);
-            },
-          );
-        },
+      builder: (_) => _HashtagPickerSheet(
+        initialTags: state.hashtags,
+        onChanged: _controller.setHashtags,
       ),
     );
   }
@@ -995,29 +814,202 @@ class _PostShortDetailsScreenState
   }
 }
 
-class _InfoBadge extends StatelessWidget {
-  const _InfoBadge({required this.label, required this.value});
+class _PreviewInfoPill extends StatelessWidget {
+  const _PreviewInfoPill({
+    required this.icon,
+    required this.label,
+    required this.semanticLabel,
+  });
 
+  final IconData icon;
   final String label;
-  final String value;
+  final String semanticLabel;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(minWidth: 100),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.appColors.border),
+    return Semantics(
+      label: '$semanticLabel: $label',
+      excludeSemantics: true,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.black54,
+          borderRadius: BorderRadius.circular(99),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: <Widget>[
+            Icon(icon, color: Colors.white, size: 12),
+            const SizedBox(width: 3),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 9,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Text(label, style: AppTextStylesX(context).caption),
-          Text(value, style: context.pStrong),
-        ],
+    );
+  }
+}
+
+class _HashtagPickerSheet extends StatefulWidget {
+  const _HashtagPickerSheet({
+    required this.initialTags,
+    required this.onChanged,
+  });
+
+  final List<String> initialTags;
+  final ValueChanged<List<String>> onChanged;
+
+  @override
+  State<_HashtagPickerSheet> createState() => _HashtagPickerSheetState();
+}
+
+class _HashtagPickerSheetState extends State<_HashtagPickerSheet> {
+  late final TextEditingController _textController;
+  late List<String> _tags;
+
+  @override
+  void initState() {
+    super.initState();
+    _textController = TextEditingController();
+    _tags = List<String>.of(widget.initialTags);
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    super.dispose();
+  }
+
+  void _addTag() {
+    final clean = normalizeShortHashtag(_textController.text);
+    if (clean == null || _tags.contains(clean) || _tags.length >= 10) return;
+    setState(() {
+      _tags = <String>[..._tags, clean];
+      _textController.clear();
+    });
+    _commit();
+  }
+
+  void _removeTag(String tag) {
+    setState(() {
+      _tags = _tags.where((item) => item != tag).toList(growable: false);
+    });
+    _commit();
+  }
+
+  void _commit() {
+    widget.onChanged(List<String>.unmodifiable(_tags));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Theme.of(context).colorScheme.surface,
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          16,
+          20,
+          MediaQuery.viewInsetsOf(context).bottom + 24,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text('Hashtags', style: context.h5),
+                        Text('Add up to 10 hashtags.', style: context.pMuted),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Close hashtags',
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: TextField(
+                      controller: _textController,
+                      autofocus: true,
+                      textInputAction: TextInputAction.done,
+                      onSubmitted: (_) => _addTag(),
+                      decoration: const InputDecoration(
+                        prefixText: '# ',
+                        hintText: 'Hashtag',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  FilledButton(
+                    onPressed: _tags.length >= 10 ? null : _addTag,
+                    child: Text('Add', style: AppTextStylesX(context).button),
+                  ),
+                ],
+              ),
+              if (_tags.isNotEmpty) ...<Widget>[
+                const SizedBox(height: 14),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: _tags
+                      .map(
+                        (tag) => InputChip(
+                          label: Text('#$tag'),
+                          onDeleted: () => _removeTag(tag),
+                        ),
+                      )
+                      .toList(growable: false),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
+    );
+  }
+}
+
+class _ComposerAction extends StatelessWidget {
+  const _ComposerAction({
+    required this.icon,
+    required this.label,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+        visualDensity: VisualDensity.compact,
+      ),
+      icon: Icon(icon, size: 16),
+      label: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
     );
   }
 }

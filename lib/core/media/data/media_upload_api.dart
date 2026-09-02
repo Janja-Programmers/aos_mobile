@@ -68,11 +68,15 @@ class MediaUploadApi {
         idempotencyKey: idempotencyKey,
       );
 
-      if (init.isLeft) return Either.left(init.leftOrNull!);
-      initialized = init.rightOrNull;
+      switch (init) {
+        case Left<Failure, MediaUploadInitResponse>(value: final failure):
+          return Either.left(failure);
+        case Right<Failure, MediaUploadInitResponse>(value: final value):
+          initialized = value;
+      }
 
       onStage?.call(MediaUploadStage.uploading);
-      if (initialized!.isMultipart) {
+      if (initialized.isMultipart) {
         final uploaded = await _uploadMultipart(
           file: file,
           init: initialized,
@@ -104,17 +108,21 @@ class MediaUploadApi {
       onStage?.call(MediaUploadStage.confirming);
       return confirmUpload(mediaId: initialized.mediaId);
     } on DioException catch (e) {
-      if ((cancelToken?.isCancelled ?? false) &&
-          (initialized?.isMultipart ?? false)) {
-        await _abortMultipartUpload(initialized!.mediaId);
+      if (cancelToken?.isCancelled ?? false) {
+        final current = initialized;
+        if (current != null && current.isMultipart) {
+          await _abortMultipartUpload(current.mediaId);
+        }
       }
       return Either.left(mapDioException(e));
     } on FileSystemException {
       return Either.left(const Failure('Could not read selected file.'));
     } catch (_) {
-      if ((cancelToken?.isCancelled ?? false) &&
-          (initialized?.isMultipart ?? false)) {
-        await _abortMultipartUpload(initialized!.mediaId);
+      if (cancelToken?.isCancelled ?? false) {
+        final current = initialized;
+        if (current != null && current.isMultipart) {
+          await _abortMultipartUpload(current.mediaId);
+        }
       }
       return Either.left(const Failure('Failed to upload media.'));
     }
@@ -266,6 +274,8 @@ class MediaUploadApi {
       final statusResult = await _multipartStatus(init.mediaId);
       if (statusResult.isLeft) return Either.left(statusResult.leftOrNull!);
       final status = statusResult.rightOrNull!;
+      final reconciledBytes = status.uploadedBytes.clamp(0, sizeBytes).toInt();
+      onSendProgress?.call(reconciledBytes, sizeBytes);
       if (status.state == 'failed') {
         return Either.left(
           Failure(
@@ -318,6 +328,13 @@ class MediaUploadApi {
           // Signed UploadPart URLs are intentionally short-lived. Reconcile
           // storage truth and request fresh URLs instead of treating an
           // expired signature as a terminal upload failure.
+          continue;
+        }
+        if (reconciliation < 2 && _shouldReconcileMultipartFailure(failure)) {
+          // A transient part failure may happen after storage accepted other
+          // in-flight parts. Re-read backend/storage truth before failing the
+          // whole user-visible upload. The bounded reconciliation count avoids
+          // turning a persistent outage into an unbounded retry loop.
           continue;
         }
         return Either.left(failure);
@@ -485,6 +502,17 @@ class MediaUploadApi {
 
   bool _shouldRefreshMultipartPartUrls(Failure failure) {
     return failure.statusCode == 401 || failure.statusCode == 403;
+  }
+
+  bool _shouldReconcileMultipartFailure(Failure failure) {
+    final status = failure.statusCode;
+    return failure.type == FailureType.network ||
+        failure.type == FailureType.timeout ||
+        failure.type == FailureType.rateLimited ||
+        failure.type == FailureType.server ||
+        status == 408 ||
+        status == 429 ||
+        (status != null && status >= 500);
   }
 
   bool _isTransientUploadError(DioException error) {

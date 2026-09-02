@@ -100,17 +100,15 @@ class ShortsTopItem {
   });
 
   factory ShortsTopItem.fromJson(Map<String, dynamic> json) {
-    final totals = json['totals'] is Map<String, dynamic>
-        ? json['totals'] as Map<String, dynamic>
-        : json;
-
+    final totals = asJsonMap(json['totals']);
+    final values = totals.isEmpty ? json : totals;
     return ShortsTopItem(
       id: json['id']?.toString() ?? json['short']?.toString() ?? '',
       caption: json['caption']?.toString() ?? '',
       thumbnailUrl: json['thumbnail_url']?.toString(),
-      views: _toInt(totals['views'] ?? json['views']),
-      likes: _toInt(totals['likes'] ?? json['likes']),
-      shares: _toInt(totals['shares'] ?? json['shares']),
+      views: _toInt(values['views'] ?? json['views']),
+      likes: _toInt(values['likes'] ?? json['likes']),
+      shares: _toInt(values['shares'] ?? json['shares']),
     );
   }
 
@@ -139,17 +137,46 @@ class ShortsAnalyticsResult {
   });
 
   factory ShortsAnalyticsResult.fromJson(Map<String, dynamic> json) {
-    final topShorts = asJsonMapList(
-      json['top_shorts'],
-    ).map(ShortsTopItem.fromJson).toList(growable: false);
-
     return ShortsAnalyticsResult(
       dateFrom: DateTime.tryParse(json['date_from']?.toString() ?? ''),
       dateTo: DateTime.tryParse(json['date_to']?.toString() ?? ''),
       totals: ShortsAnalyticsSummary.fromJson(asJsonMap(json['totals'])),
       daily: asJsonMapList(json['daily']),
-      topShorts: topShorts,
+      topShorts: asJsonMapList(
+        json['top_shorts'],
+      ).map(ShortsTopItem.fromJson).toList(growable: false),
       overview: asJsonMap(json['overview']),
+    );
+  }
+}
+
+class ShortAnalyticsResult {
+  const ShortAnalyticsResult({
+    required this.short,
+    required this.dateFrom,
+    required this.dateTo,
+    required this.totals,
+    required this.currentTotals,
+    required this.daily,
+  });
+
+  final Map<String, dynamic> short;
+  final DateTime? dateFrom;
+  final DateTime? dateTo;
+  final ShortsAnalyticsSummary totals;
+  final ShortsAnalyticsSummary currentTotals;
+  final List<Map<String, dynamic>> daily;
+
+  factory ShortAnalyticsResult.fromJson(Map<String, dynamic> json) {
+    return ShortAnalyticsResult(
+      short: asJsonMap(json['short']),
+      dateFrom: DateTime.tryParse(json['date_from']?.toString() ?? ''),
+      dateTo: DateTime.tryParse(json['date_to']?.toString() ?? ''),
+      totals: ShortsAnalyticsSummary.fromJson(asJsonMap(json['totals'])),
+      currentTotals: ShortsAnalyticsSummary.fromJson(
+        asJsonMap(json['current_totals']),
+      ),
+      daily: asJsonMapList(json['daily']),
     );
   }
 }

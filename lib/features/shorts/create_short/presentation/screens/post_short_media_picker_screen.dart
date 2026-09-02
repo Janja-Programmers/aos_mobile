@@ -15,7 +15,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 class PostShortMediaPickerScreen extends ConsumerStatefulWidget {
-  const PostShortMediaPickerScreen({super.key});
+  const PostShortMediaPickerScreen({super.key, this.initialSound});
+
+  final ShortSound? initialSound;
 
   @override
   ConsumerState<PostShortMediaPickerScreen> createState() =>
@@ -25,13 +27,14 @@ class PostShortMediaPickerScreen extends ConsumerStatefulWidget {
 class _PostShortMediaPickerScreenState
     extends ConsumerState<PostShortMediaPickerScreen>
     with WidgetsBindingObserver {
-  ShortSound _selectedSound = ShortSound.original;
+  late ShortSound _selectedSound;
   String? _openedPath;
   bool _checkedDraft = false;
 
   @override
   void initState() {
     super.initState();
+    _selectedSound = widget.initialSound ?? ShortSound.original;
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       unawaited(_initializeRecorder());
@@ -41,7 +44,10 @@ class _PostShortMediaPickerScreenState
   Future<void> _initializeRecorder() async {
     await ref.read(shortRecorderControllerProvider.notifier).initialize();
     if (!mounted) return;
-    await _offerLatestDraft();
+    final initialSound = widget.initialSound;
+    if (initialSound == null || initialSound.isOriginal) {
+      await _offerLatestDraft();
+    }
   }
 
   @override

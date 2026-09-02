@@ -51,10 +51,13 @@ final soundPickerControllerProvider =
       return SoundPickerController(ref.read(shortsSoundsApiProvider));
     });
 
-final shortMentionsControllerProvider =
-    StateNotifierProvider.autoDispose<
-      ShortMentionsController,
-      ShortMentionsState
-    >((ref) {
+/// Mention search is scoped to the active Short publishing session.
+///
+/// The publish screen watches this family member for its entire lifetime, so
+/// the inline `@` suggestions and the mention modal share one controller while
+/// still allowing Riverpod to dispose it when that publishing session leaves
+/// the widget tree.
+final shortMentionsControllerProvider = StateNotifierProvider.autoDispose
+    .family<ShortMentionsController, ShortMentionsState, String>((ref, _) {
       return ShortMentionsController(ref.read(socialApiProvider));
     });

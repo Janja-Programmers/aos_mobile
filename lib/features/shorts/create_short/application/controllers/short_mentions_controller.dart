@@ -86,6 +86,13 @@ class ShortMentionsController extends StateNotifier<ShortMentionsState> {
     });
   }
 
+  void clear() {
+    if (_disposed) return;
+    _requestGeneration += 1;
+    _debounce?.cancel();
+    state = ShortMentionsState.initial();
+  }
+
   Future<void> retry() {
     return _load(state.query, reset: true);
   }
